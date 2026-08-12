@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* App styles moved from page.tsx */
+
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* GLOBAL */
+body {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  background: #f5f7fb;
+  color: #1e293b;
+  line-height: 1.7;
+}
+
+a { text-decoration: none; color: inherit; }
+button, input, select { font-family: inherit; }
+
+.navbar { height: 68px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 6%; position: sticky; top: 0; z-index: 100; }
+.logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:19px; color:#1d4ed8 }
+.logo-icon{ width:38px; height:38px; border-radius:10px; background:#dbeafe; display:flex; align-items:center; justify-content:center; font-size:20px }
+.nav-label{ color:#64748b; font-size:14px }
+
+.hero{ background: linear-gradient(120deg,#1e40af,#2563eb,#4f46e5); color:white; padding:70px 20px; position:relative; overflow:hidden }
+.hero::before{ content:""; position:absolute; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.08); right:-80px; top:-100px }
+.hero::after{ content:""; position:absolute; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,0.06); left:-80px; bottom:-100px }
+.hero-content{ max-width:1100px; margin:auto; position:relative; z-index:2 }
+.lesson-tag{ display:inline-block; padding:6px 14px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:20px; font-size:13px; margin-bottom:18px }
+.hero h1{ font-size:42px; line-height:1.25; margin-bottom:16px }
+.hero p{ max-width:700px; color:#dbeafe; font-size:17px }
+
+.page{ max-width:1150px; margin:40px auto; padding:0 20px; display:grid; grid-template-columns:260px 1fr; gap:30px }
+
+.sidebar{ position:sticky; top:95px; height:fit-content }
+.sidebar-card{ background:white; border:1px solid #e5e7eb; border-radius:16px; padding:18px }
+.sidebar-title{ font-size:14px; font-weight:700; color:#64748b; margin-bottom:12px }
+.lesson-menu{ display:flex; flex-direction:column; gap:6px }
+.lesson-menu a{ padding:10px 12px; border-radius:9px; color:#475569; font-size:14px; transition:0.2s }
+.lesson-menu a:hover{ background:#eff6ff; color:#1d4ed8 }
+.lesson-menu a.active{ background:#dbeafe; color:#1d4ed8; font-weight:600 }
+
+.content{ min-width:0 }
+.section{ background:white; border:1px solid #e5e7eb; border-radius:18px; padding:32px; margin-bottom:28px; scroll-margin-top:90px }
+.section-number{ color:#2563eb; font-size:13px; font-weight:700; margin-bottom:5px }
+.section h2{ font-size:27px; margin-bottom:14px; color:#0f172a }
+.section h3{ font-size:20px; margin:25px 0 12px; color:#1e3a8a }
+.section p{ color:#475569; margin-bottom:12px }
+
+.objective-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:15px; margin-top:20px }
+.objective{ padding:20px; background:#f8fafc; border-radius:14px; border:1px solid #e2e8f0 }
+.objective-icon{ font-size:28px; margin-bottom:8px }
+
+.base-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:20px }
+.base-card{ padding:22px 15px; border-radius:15px; text-align:center; background:#f8fafc; border:1px solid #e2e8f0 }
+
+.info-box{ padding:18px 20px; border-radius:12px; margin:18px 0; background:#eff6ff; border-left:5px solid #2563eb }
+.warning-box{ padding:18px 20px; border-radius:12px; margin:18px 0; background:#fff7ed; border-left:5px solid #f97316 }
+.success-box{ padding:18px 20px; border-radius:12px; margin:18px 0; background:#ecfdf5; border-left:5px solid #10b981 }
+
+.rule-table{ width:100%; border-collapse:collapse; margin-top:18px }
+.rule-table th{ background:#1e3a8a; color:white; padding:13px }
+.rule-table td{ border:1px solid #e2e8f0; padding:13px; text-align:center }
+.rule-table tr:nth-child(even){ background:#f8fafc }
+
+.binary-number{ font-family:monospace; font-size:21px; font-weight:700; letter-spacing:2px }
+
+.example-header{ background:#0f172a; color:white; padding:25px; border-radius:15px; margin-top:20px; text-align:center }
+.example-header .question{ font-size:28px; font-family:monospace; letter-spacing:4px; margin:10px 0 }
+.step-container{ margin-top:20px; display:flex; flex-direction:column; gap:15px }
+.step-card{ border:1px solid #dbeafe; border-radius:15px; overflow:hidden; background:#ffffff }
+.step-title{ background:#eff6ff; padding:15px 18px; display:flex; align-items:center; gap:12px }
+.step-badge{ width:35px; height:35px; border-radius:50%; background:#2563eb; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0 }
+.formula{ background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:18px; font-family:monospace; font-size:20px; margin:10px 0; overflow-x:auto }
+
+.binary-board{ background:#0f172a; padding:25px; border-radius:15px; margin-top:20px; color:white; overflow-x:auto }
+.binary-row{ display:flex; justify-content:center; min-width:400px }
+.binary-cell{ width:55px; height:55px; border:1px solid #334155; display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:22px; font-weight:bold }
+.binary-cell.active{ background:#2563eb; border-color:#60a5fa }
+.binary-label{ color:#94a3b8; font-size:12px; text-align:center; margin-top:10px }
+
+.lab{ background: linear-gradient(135deg,#eff6ff,#eef2ff); border:1px solid #bfdbfe }
+.lab-form{ display:grid; grid-template-columns:1fr 1fr 180px; gap:15px; margin-top:20px }
+.form-group label{ display:block; font-size:14px; font-weight:600; margin-bottom:7px }
+.form-group input, .form-group select{ width:100%; padding:13px; border:1px solid #cbd5e1; border-radius:9px; background:white; outline:none; font-size:16px }
+.form-group input:focus, .form-group select:focus{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1) }
+.calculate-btn{ margin-top:18px; width:100%; border:none; background:#2563eb; color:white; padding:14px; border-radius:10px; cursor:pointer; font-size:16px; font-weight:700 }
+.interactive-result{ display:none; margin-top:25px }
+.result-main{ background:#0f172a; color:white; padding:25px; border-radius:14px; text-align:center }
+.result-main .equation{ font-family:monospace; font-size:28px; letter-spacing:3px }
+.result-main .result-value{ color:#60a5fa; font-size:34px; font-weight:800; margin-top:8px }
+.interactive-step{ background:white; border:1px solid #dbeafe; border-radius:12px; margin-top:12px; padding:18px }
+.interactive-step h4{ color:#1d4ed8; margin-bottom:8px }
+
+.practice{ background:#fff }
+.question-card{ background:#f8fafc; border-radius:14px; padding:22px; margin-top:15px; border:1px solid #e2e8f0 }
+.question-number{ color:#2563eb; font-size:13px; font-weight:700; margin-bottom:8px }
+.question-text{ font-family:monospace; font-size:25px; margin-bottom:15px }
+.answer-input{ width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px }
+.check-btn{ padding:10px 18px; border:none; border-radius:8px; background:#334155; color:white; cursor:pointer }
+.practice-result{ margin-top:10px; font-weight:600 }
+
+.summary-list{ display:flex; flex-direction:column; gap:12px; margin-top:18px }
+.summary-item{ display:flex; gap:12px; align-items:flex-start }
+.check{ width:25px; height:25px; background:#dcfce7; color:#15803d; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:3px }
+
+footer{ margin-top:60px; padding:35px; text-align:center; background:#0f172a; color:#94a3b8 }
+
+@media (max-width:900px){ .page{ grid-template-columns:1fr } .sidebar{ position:static } .lesson-menu{ display:grid; grid-template-columns:repeat(2,1fr) } .objective-grid{ grid-template-columns:1fr } .base-grid{ grid-template-columns:repeat(2,1fr) } .lab-form{ grid-template-columns:1fr } }
+@media (max-width:600px){ .hero h1{ font-size:30px } .section{ padding:22px } .base-grid{ grid-template-columns:1fr } .lesson-menu{ grid-template-columns:1fr } }
