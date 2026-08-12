@@ -174,7 +174,7 @@ export default function Home() {
               <div className="summary-item"><div className="check">✓</div><div>Carry จากหลักก่อนหน้า ต้องนำมารวมกับหลักถัดไป</div></div>
               <div className="summary-item"><div className="check">✓</div><div>ตรวจสอบคำตอบโดยสามารถ แปลงกลับเป็นฐาน 10 ได้</div></div>
             </div>
-            <div className="success-box"><strong>🎉 เก่งมาก!</strong><br/>ตอนนี้มึงเข้าใจพื้นฐานการบวกเลขฐานแล้ว ลองกลับไปทำแบบฝึกหัดอีกครั้ง เพื่อฝึกให้คล่อง</div>
+            <div className="success-box"><strong>🎉 เก่งมาก!</strong><br/>ตอนนี้คุณเข้าใจพื้นฐานการบวกเลขฐานแล้ว ลองกลับไปทำแบบฝึกหัดอีกครั้ง เพื่อฝึกให้คล่อง</div>
           </section>
 
         </main>
