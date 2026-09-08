@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "วาลิด เต๊ะ 054-8",
+  title: "Base Learning",
   description: "คู่มือการคำนวณเลขฐาน",
 };
 
