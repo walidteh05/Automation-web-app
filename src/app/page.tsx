@@ -1,17 +1,22 @@
-import Image from "next/image";
 import BaseAdder from "../components/BaseAdder";
+import AuthControls from "../components/AuthControls";
+import HomeAuthGuard from "../components/HomeAuthGuard";
 import Practice from "../components/Practice";
 
 export default function Home() {
   return (
-    <>
+    <HomeAuthGuard>
+      <>
 
       <nav className="navbar">
         <div className="logo">
           <div className="logo-icon">∑</div>
           Base Learning
         </div>
-        <div className="nav-label">บทเรียนที่ 01 • ระบบเลขฐาน</div>
+        <div className="nav-actions">
+          <div className="nav-label">บทเรียนที่ 01 • ระบบเลขฐาน</div>
+          <AuthControls />
+        </div>
       </nav>
 
       <header className="hero">
@@ -184,6 +189,7 @@ export default function Home() {
         <div>Base Learning</div>
         <small>สื่อการเรียนรู้เรื่องระบบเลขฐาน</small>
       </footer>
-    </>
+      </>
+    </HomeAuthGuard>
   );
 }
