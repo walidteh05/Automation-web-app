@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Kanit } from "next/font/google";
+import ThemeToggle from "../components/ThemeToggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,8 +29,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${kanit.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("ams-theme");document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}` }} />
+        {children}
+        <ThemeToggle />
+      </body>
     </html>
   );
 }

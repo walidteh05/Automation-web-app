@@ -4,6 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import AuthControls from "./AuthControls";
 import AutomationSidebar from "./AutomationSidebar";
 import { getSupabaseClient, type UserRole } from "../lib/supabase/client";
+import { downloadCsv } from "../lib/csv";
+import { isValidDateRange, isWithinLocalDateRange } from "../lib/dateRange";
 
 type AlarmStatus = "open" | "in_progress" | "closed";
 type AlarmStatusFilter = "all" | AlarmStatus;
@@ -78,6 +80,8 @@ export default function AlarmRecordsWorkspace() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<AlarmStatusFilter>("all");
   const [machineFilter, setMachineFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const [error, setError] = useState("");
@@ -143,6 +147,8 @@ export default function AlarmRecordsWorkspace() {
   }, [reloadKey]);
 
   const normalizedSearch = search.trim().toLocaleLowerCase();
+  const isDateRangeValid = isValidDateRange(startDate, endDate);
+  const hasDateRange = Boolean(startDate || endDate);
   const filteredAlarms = alarms.filter((alarm) => {
     const searchValues = [
       alarm.alarm_code,
@@ -153,13 +159,36 @@ export default function AlarmRecordsWorkspace() {
     const matchesSearch = searchValues.some((value) => value.toLocaleLowerCase().includes(normalizedSearch));
     const matchesStatus = statusFilter === "all" || alarm.status === statusFilter;
     const matchesMachine = machineFilter === "all" || alarm.machine_id === machineFilter;
-    return matchesSearch && matchesStatus && matchesMachine;
+    const matchesDate = isDateRangeValid && isWithinLocalDateRange(alarm.occurred_at, startDate, endDate);
+    return matchesSearch && matchesStatus && matchesMachine && matchesDate;
   });
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setMachineFilter("all");
+    setStartDate("");
+    setEndDate("");
+  }
 
   function reloadRecords() {
     setError("");
     setIsLoading(true);
     setReloadKey((key) => key + 1);
+  }
+
+  function exportAlarms() {
+    if (filteredAlarms.length === 0) return;
+    downloadCsv("alarms", ["Alarm Code", "Machine Code", "Machine Name", "Description", "Cause", "Occurred At", "Status", "Created By"], filteredAlarms.map((alarm) => [
+      alarm.alarm_code,
+      alarm.machine?.machine_code ?? "",
+      alarm.machine?.machine_name ?? "",
+      alarm.alarm_description,
+      alarm.cause,
+      alarm.occurred_at,
+      statuses.find((item) => item.value === alarm.status)?.label ?? alarm.status,
+      alarm.creator?.display_name ?? (alarm.created_by ? `${alarm.created_by.slice(0, 8)}…` : "ระบบ"),
+    ]));
   }
 
   function openCreateForm() {
@@ -307,7 +336,13 @@ export default function AlarmRecordsWorkspace() {
                   {machines.map((machine) => <option key={machine.id} value={machine.id}>{machine.machine_code} · {machine.machine_name}</option>)}
                 </select>
               </label>
+              <label className="ams-date-filter"><span>วันที่เริ่มต้น</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-label="วันที่เริ่มต้นสำหรับกรอง Alarm" /></label>
+              <label className="ams-date-filter"><span>วันที่สิ้นสุด</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-label="วันที่สิ้นสุดสำหรับกรอง Alarm" /></label>
+              <button className="ams-clear-filter-button" type="button" onClick={clearFilters}>ล้างตัวกรอง</button>
               <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
+              <button className="ams-export-button" type="button" onClick={exportAlarms} disabled={isLoading || filteredAlarms.length === 0} aria-label="ส่งออก Alarm เป็น CSV"><span aria-hidden="true">↓</span> Export CSV</button>
+              {!isLoading && filteredAlarms.length === 0 && <span className="ams-export-empty" role="status">ไม่มีข้อมูลสำหรับส่งออก</span>}
+              {!isDateRangeValid && <p className="ams-date-range-error" role="alert">วันที่เริ่มต้นต้องไม่อยู่หลังวันที่สิ้นสุด</p>}
             </div>
 
             <div className="ams-table-scroll">
@@ -319,7 +354,7 @@ export default function AlarmRecordsWorkspace() {
                   ) : error && alarms.length === 0 ? (
                     <tr><td className="ams-table-message is-error" colSpan={8}>{error}</td></tr>
                   ) : filteredAlarms.length === 0 ? (
-                    <tr><td className="ams-table-message" colSpan={8}>{alarms.length === 0 ? "ไม่พบข้อมูล Alarm" : "ไม่พบ Alarm ที่ตรงกับตัวกรอง"}</td></tr>
+                    <tr><td className="ams-table-message" colSpan={8}>{hasDateRange ? "ไม่พบข้อมูลในช่วงวันที่ที่เลือก" : alarms.length === 0 ? "ไม่พบข้อมูล Alarm" : "ไม่พบ Alarm ที่ตรงกับตัวกรอง"}</td></tr>
                   ) : (
                     filteredAlarms.map((alarm) => (
                       <tr key={alarm.id}>

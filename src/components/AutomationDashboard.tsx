@@ -44,6 +44,7 @@ type DashboardData = {
   alarmCount: number;
   maintenance: DashboardMaintenance[];
   maintenanceCount: number;
+  analyticsAlarms: Pick<DashboardAlarm, "status" | "occurred_at">[];
 };
 
 const emptyDashboardData: DashboardData = {
@@ -52,7 +53,31 @@ const emptyDashboardData: DashboardData = {
   alarmCount: 0,
   maintenance: [],
   maintenanceCount: 0,
+  analyticsAlarms: [],
 };
+
+const alarmStatusItems = [
+  { value: "open", label: "เปิด", color: "#cb6255" },
+  { value: "in_progress", label: "กำลังดำเนินการ", color: "#468c9a" },
+  { value: "closed", label: "ปิดแล้ว", color: "#559769" },
+] as const;
+
+function buildAlarmTrend(alarms: DashboardData["analyticsAlarms"]) {
+  const today = new Date();
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(today);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (13 - index));
+    return date;
+  });
+  const counts = days.map((date) => alarms.filter((alarm) => {
+    const occurredAt = new Date(alarm.occurred_at);
+    return occurredAt.getFullYear() === date.getFullYear() && occurredAt.getMonth() === date.getMonth() && occurredAt.getDate() === date.getDate();
+  }).length);
+  const maxCount = Math.max(...counts, 1);
+  const points = counts.map((count, index) => `${28 + (index * 544) / 13},${126 - (count / maxCount) * 102}`).join(" ");
+  return { days, counts, maxCount, points };
+}
 
 const machineStatusItems = [
   { label: "กำลังทำงาน", value: "running", tone: "running" },
@@ -131,6 +156,15 @@ export default function AutomationDashboard() {
         if (maintenanceRowsResult.error) throw maintenanceRowsResult.error;
         if (maintenanceCountResult.error) throw maintenanceCountResult.error;
 
+        const analyticsAlarms: DashboardData["analyticsAlarms"] = [];
+        const pageSize = 1000;
+        for (let start = 0; ; start += pageSize) {
+          const { data, error } = await supabase.from("alarm_records").select("status, occurred_at").order("occurred_at", { ascending: true }).range(start, start + pageSize - 1);
+          if (error) throw error;
+          analyticsAlarms.push(...(data ?? []));
+          if (!data || data.length < pageSize) break;
+        }
+
         if (isMounted) {
           setDashboardData({
             machines: machinesResult.data ?? [],
@@ -138,6 +172,7 @@ export default function AutomationDashboard() {
             alarmCount: alarmCountResult.count ?? 0,
             maintenance: (maintenanceRowsResult.data ?? []) as DashboardMaintenance[],
             maintenanceCount: maintenanceCountResult.count ?? 0,
+            analyticsAlarms,
           });
           setDataError("");
         }
@@ -224,6 +259,10 @@ export default function AutomationDashboard() {
   }
 
   const initials = identity.displayName.trim().slice(0, 1).toUpperCase() || "U";
+  const alarmCounts = alarmStatusItems.map((item) => ({ ...item, count: dashboardData.analyticsAlarms.filter((alarm) => alarm.status === item.value).length }));
+  const maxStatusCount = Math.max(...alarmCounts.map((item) => item.count), 1);
+  const alarmTrend = buildAlarmTrend(dashboardData.analyticsAlarms);
+  const trendHasAlarms = alarmTrend.counts.some((count) => count > 0);
 
   return (
     <div className="ams-shell" id="overview">
@@ -307,6 +346,35 @@ export default function AutomationDashboard() {
               </div>
             </section>
           </div>
+
+          <section className="ams-section ams-analytics-section" aria-labelledby="alarm-analytics-title">
+            <div className="ams-section-heading">
+              <div><p className="ams-eyebrow">วิเคราะห์รายการแจ้งเตือน</p><h2 id="alarm-analytics-title">Alarm Analytics</h2></div>
+              <span className="ams-total-chip">{isDataLoading ? "—" : `${dashboardData.analyticsAlarms.length} รายการ`}</span>
+            </div>
+            {isDataLoading ? <p className="ams-analytics-message" role="status">กำลังโหลดข้อมูล Alarm...</p> : dataError ? <p className="ams-analytics-message is-error" role="alert">ไม่สามารถโหลดข้อมูลวิเคราะห์ Alarm ได้</p> : dashboardData.analyticsAlarms.length === 0 ? <p className="ams-analytics-message">ยังไม่มีข้อมูล Alarm สำหรับแสดงผล</p> : (
+              <div className="ams-analytics-grid">
+                <div className="ams-status-analytics" aria-labelledby="alarm-status-analytics-title">
+                  <h3 className="ams-analytics-subtitle" id="alarm-status-analytics-title">Alarm Status Analytics</h3>
+                  <div className="ams-analytics-statuses" aria-label="จำนวน Alarm ตามสถานะปัจจุบัน">
+                    {alarmCounts.map((item) => <div className="ams-analytics-status" key={item.value}><div className="ams-analytics-status-label"><span className="ams-analytics-dot" style={{ backgroundColor: item.color }} /><span>{item.label}</span><strong>{item.count}</strong></div><div className="ams-status-analytics-track"><span style={{ width: `${(item.count / maxStatusCount) * 100}%`, backgroundColor: item.color }} /></div></div>)}
+                  </div>
+                </div>
+                <div className="ams-trend-wrap">
+                  <div className="ams-trend-title"><strong>Alarm Trend</strong><span>14 วันล่าสุด</span></div>
+                  {!trendHasAlarms ? <p className="ams-analytics-message">ไม่มี Alarm ที่เกิดขึ้นในช่วง 14 วันที่ผ่านมา</p> : <div className="ams-trend-chart">
+                    <svg viewBox="0 0 600 150" role="img" aria-label="กราฟจำนวน Alarm รายวันในช่วง 14 วันล่าสุด" preserveAspectRatio="none">
+                      {[24, 75, 126].map((y) => <line key={y} x1="28" y1={y} x2="572" y2={y} className="ams-trend-gridline" />)}
+                      <polyline points={alarmTrend.points} className="ams-trend-line" />
+                      {alarmTrend.counts.map((count, index) => <circle key={alarmTrend.days[index].toISOString()} cx={28 + (index * 544) / 13} cy={126 - (count / alarmTrend.maxCount) * 102} r="3" className="ams-trend-point"><title>{`${alarmTrend.days[index].toLocaleDateString("th-TH", { day: "numeric", month: "short" })}: ${count} รายการ`}</title></circle>)}
+                    </svg>
+                    <div className="ams-trend-labels"><span>{alarmTrend.days[0].toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</span><span>{alarmTrend.days[6].toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</span><span>{alarmTrend.days[13].toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</span></div>
+                    <p className="ams-trend-caption">จำนวน Alarm ที่เกิดในแต่ละวัน</p>
+                  </div>}
+                </div>
+              </div>
+            )}
+          </section>
 
           <section className="ams-section ams-maintenance-section" id="maintenance" aria-labelledby="maintenance-title">
             <div className="ams-section-heading">

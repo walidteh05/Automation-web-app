@@ -4,6 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import AuthControls from "./AuthControls";
 import AutomationSidebar from "./AutomationSidebar";
 import { getSupabaseClient, type UserRole } from "../lib/supabase/client";
+import { downloadCsv } from "../lib/csv";
+import { isValidDateRange, isWithinLocalDateRange } from "../lib/dateRange";
 
 type MaintenanceStatus = "planned" | "in_progress" | "completed" | "cancelled";
 type MaintenanceStatusFilter = "all" | MaintenanceStatus;
@@ -16,6 +18,8 @@ type MaintenanceRecord = {
   work_performed: string | null;
   maintenance_at: string;
   status: MaintenanceStatus;
+  created_at: string;
+  updated_at: string;
   machine: { machine_code: string; machine_name: string } | null;
   technician: { display_name: string } | null;
 };
@@ -84,6 +88,8 @@ export default function MaintenanceRecordsWorkspace() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<MaintenanceStatusFilter>("all");
   const [machineFilter, setMachineFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const [error, setError] = useState("");
@@ -115,7 +121,7 @@ export default function MaintenanceRecordsWorkspace() {
           supabase.from("profiles").select("id, display_name").eq("role", "technician").order("display_name"),
           supabase
             .from("maintenance_records")
-            .select("id, machine_id, technician_id, description, work_performed, maintenance_at, status, machine:machines!maintenance_records_machine_id_fkey(machine_code, machine_name), technician:profiles!maintenance_records_technician_id_fkey(display_name)")
+            .select("id, machine_id, technician_id, description, work_performed, maintenance_at, status, created_at, updated_at, machine:machines!maintenance_records_machine_id_fkey(machine_code, machine_name), technician:profiles!maintenance_records_technician_id_fkey(display_name)")
             .order("maintenance_at", { ascending: false }),
         ]);
 
@@ -151,6 +157,8 @@ export default function MaintenanceRecordsWorkspace() {
   }, [reloadKey]);
 
   const normalizedSearch = search.trim().toLocaleLowerCase();
+  const isDateRangeValid = isValidDateRange(startDate, endDate);
+  const hasDateRange = Boolean(startDate || endDate);
   const filteredRecords = records.filter((record) => {
     const searchValues = [
       record.machine?.machine_code ?? "",
@@ -162,13 +170,37 @@ export default function MaintenanceRecordsWorkspace() {
     const matchesSearch = searchValues.some((value) => value.toLocaleLowerCase().includes(normalizedSearch));
     const matchesStatus = statusFilter === "all" || record.status === statusFilter;
     const matchesMachine = machineFilter === "all" || record.machine_id === machineFilter;
-    return matchesSearch && matchesStatus && matchesMachine;
+    const matchesDate = isDateRangeValid && isWithinLocalDateRange(record.maintenance_at, startDate, endDate);
+    return matchesSearch && matchesStatus && matchesMachine && matchesDate;
   });
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setMachineFilter("all");
+    setStartDate("");
+    setEndDate("");
+  }
 
   function reloadRecords() {
     setError("");
     setIsLoading(true);
     setReloadKey((key) => key + 1);
+  }
+
+  function exportMaintenance() {
+    if (filteredRecords.length === 0) return;
+    downloadCsv("maintenance", ["Machine Code", "Machine Name", "Technician", "Description", "Work Performed", "Maintenance At", "Status", "Created At", "Updated At"], filteredRecords.map((record) => [
+      record.machine?.machine_code ?? "",
+      record.machine?.machine_name ?? "",
+      record.technician?.display_name ?? "",
+      record.description,
+      record.work_performed,
+      record.maintenance_at,
+      statuses.find((item) => item.value === record.status)?.label ?? record.status,
+      record.created_at,
+      record.updated_at,
+    ]));
   }
 
   function openCreateForm() {
@@ -315,7 +347,13 @@ export default function MaintenanceRecordsWorkspace() {
                   {machines.map((machine) => <option key={machine.id} value={machine.id}>{machine.machine_code} · {machine.machine_name}</option>)}
                 </select>
               </label>
+              <label className="ams-date-filter"><span>วันที่เริ่มต้น</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-label="วันที่เริ่มต้นสำหรับกรองรายการซ่อมบำรุง" /></label>
+              <label className="ams-date-filter"><span>วันที่สิ้นสุด</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-label="วันที่สิ้นสุดสำหรับกรองรายการซ่อมบำรุง" /></label>
+              <button className="ams-clear-filter-button" type="button" onClick={clearFilters}>ล้างตัวกรอง</button>
               <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
+              <button className="ams-export-button" type="button" onClick={exportMaintenance} disabled={isLoading || filteredRecords.length === 0} aria-label="ส่งออกรายการซ่อมบำรุงเป็น CSV"><span aria-hidden="true">↓</span> Export CSV</button>
+              {!isLoading && filteredRecords.length === 0 && <span className="ams-export-empty" role="status">ไม่มีข้อมูลสำหรับส่งออก</span>}
+              {!isDateRangeValid && <p className="ams-date-range-error" role="alert">วันที่เริ่มต้นต้องไม่อยู่หลังวันที่สิ้นสุด</p>}
             </div>
 
             <div className="ams-table-scroll">
@@ -327,7 +365,7 @@ export default function MaintenanceRecordsWorkspace() {
                   ) : error && records.length === 0 ? (
                     <tr><td className="ams-table-message is-error" colSpan={7}>{error}</td></tr>
                   ) : filteredRecords.length === 0 ? (
-                    <tr><td className="ams-table-message" colSpan={7}>{records.length === 0 ? "ไม่พบข้อมูลการซ่อมบำรุง" : "ไม่พบรายการที่ตรงกับตัวกรอง"}</td></tr>
+                    <tr><td className="ams-table-message" colSpan={7}>{hasDateRange ? "ไม่พบข้อมูลในช่วงวันที่ที่เลือก" : records.length === 0 ? "ไม่พบข้อมูลการซ่อมบำรุง" : "ไม่พบรายการที่ตรงกับตัวกรอง"}</td></tr>
                   ) : (
                     filteredRecords.map((record) => (
                       <tr key={record.id}>

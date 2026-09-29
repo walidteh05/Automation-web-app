@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AuthControls from "./AuthControls";
 import AutomationSidebar from "./AutomationSidebar";
+import MachineHistoryModal from "./MachineHistoryModal";
 import { getSupabaseClient, type UserRole } from "../lib/supabase/client";
 
 type MachineStatus = "running" | "stop" | "alarm" | "maintenance";
@@ -58,6 +59,7 @@ export default function MachinesWorkspace() {
   const [notice, setNotice] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [historyMachine, setHistoryMachine] = useState<Machine | null>(null);
 
   const isAdmin = role === "admin";
 
@@ -309,14 +311,15 @@ export default function MachinesWorkspace() {
                         <td>{machine.location}</td>
                         <td><span className={`ams-status-pill is-machine-${machine.status}`}>{statusLabels[machine.status]}</span></td>
                         <td>
-                          {isAdmin ? (
-                            <div className="ams-machine-actions">
+                          <div className="ams-machine-actions">
+                            <button className="ams-history-button" type="button" onClick={() => setHistoryMachine(machine)} aria-label={`ดูประวัติ ${machine.machine_code}`}>ประวัติ</button>
+                            {isAdmin && <>
                               <button type="button" onClick={() => openEditForm(machine)} aria-label={`แก้ไข ${machine.machine_code}`}>แก้ไข</button>
                               <button type="button" className="is-delete" onClick={() => softDeleteMachine(machine)} disabled={deletingId === machine.id} aria-label={`ลบ ${machine.machine_code}`}>
                                 {deletingId === machine.id ? "กำลังลบ" : "ลบ"}
                               </button>
-                            </div>
-                          ) : <span className="ams-action-placeholder" aria-label="ดูข้อมูลได้อย่างเดียว">—</span>}
+                            </>}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -326,6 +329,8 @@ export default function MachinesWorkspace() {
             </div>
             <div className="ams-machine-table-foot"><span>แสดง {filteredMachines.length} จาก {machines.length} เครื่องจักรที่ใช้งาน</span><span>{isAdmin ? "Admin จัดการได้" : "ดูข้อมูลได้อย่างเดียว"}</span></div>
           </section>
+
+          {historyMachine && <MachineHistoryModal key={historyMachine.id} machine={historyMachine} onClose={() => setHistoryMachine(null)} />}
 
           {draft && (
             <div className="ams-modal-backdrop">
