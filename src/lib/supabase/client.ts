@@ -1,6 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-type UserRole = "student" | "teacher" | "admin";
+export type UserRole = "admin" | "technician";
+
+export function isUserRole(value: unknown): value is UserRole {
+  return value === "admin" || value === "technician";
+}
 
 type Database = {
   public: {
@@ -25,6 +29,96 @@ type Database = {
           created_at?: string;
         };
         Relationships: [];
+      };
+      machines: {
+        Row: {
+          id: string;
+          machine_code: string;
+          machine_name: string;
+          machine_type: string;
+          location: string;
+          status: "running" | "stop" | "alarm" | "maintenance";
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          machine_code: string;
+          machine_name: string;
+          machine_type: string;
+          location: string;
+          status?: "running" | "stop" | "alarm" | "maintenance";
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          machine_code?: string;
+          machine_name?: string;
+          machine_type?: string;
+          location?: string;
+          status?: "running" | "stop" | "alarm" | "maintenance";
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
+      };
+      alarm_records: {
+        Row: {
+          id: string;
+          machine_id: string;
+          alarm_code: string;
+          alarm_description: string;
+          occurred_at: string;
+          cause: string | null;
+          status: "open" | "in_progress" | "closed";
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          machine_id: string;
+          alarm_code: string;
+          alarm_description: string;
+          occurred_at?: string;
+          cause?: string | null;
+          status?: "open" | "in_progress" | "closed";
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          machine_id?: string;
+          alarm_code?: string;
+          alarm_description?: string;
+          occurred_at?: string;
+          cause?: string | null;
+          status?: "open" | "in_progress" | "closed";
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "alarm_records_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alarm_records_machine_id_fkey";
+            columns: ["machine_id"];
+            isOneToOne: false;
+            referencedRelation: "machines";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;

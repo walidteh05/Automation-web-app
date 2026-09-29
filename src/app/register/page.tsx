@@ -24,7 +24,7 @@ export default function RegisterPage() {
         <section className="register-panel" aria-labelledby="register-title">
           <div className="register-mobile-label"><span /> BASE NUMBER HANDBOOK</div>
           <h2 id="register-title">สร้างบัญชีผู้ใช้งาน</h2>
-          <p className="register-intro">กรอกข้อมูลและเลือกรูปแบบการใช้งานเพื่อเริ่มต้น</p>
+          <p className="register-intro">กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้งาน</p>
           <AuthForm mode="register" />
         </section>
       </section>

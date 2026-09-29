@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { getSupabaseClient } from "../lib/supabase/client";
+import { getSupabaseClient, isUserRole } from "../lib/supabase/client";
 
 type AuthFormProps = {
   mode: "login" | "register";
@@ -16,7 +16,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"student" | "teacher" | "admin">("student");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,10 +31,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const supabase = getSupabaseClient();
       if (isRegister) {
         const displayName = String(formData.get("display_name") ?? "").trim();
-        const requestedRole = String(formData.get("role") ?? "student");
-        const role = ["student", "teacher", "admin"].includes(requestedRole)
-          ? (requestedRole as "student" | "teacher" | "admin")
-          : "student";
+        const role = "technician";
         const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
         if (password !== confirmPassword) {
@@ -75,22 +71,25 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
       const { data: profile, error: profileLookupError } = await supabase
         .from("profiles")
-        .select("id")
+        .select("role")
         .eq("id", data.user.id)
         .maybeSingle();
       if (profileLookupError) throw profileLookupError;
 
+      let role: unknown = profile?.role;
       if (!profile) {
         const metadata = data.user.user_metadata ?? {};
         const displayName = typeof metadata.display_name === "string" ? metadata.display_name : email.split("@")[0];
-        const role = ["student", "teacher", "admin"].includes(metadata.role) ? metadata.role : "student";
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          display_name: displayName,
-          role,
-        });
+        const { data: createdProfile, error: profileError } = await supabase
+          .from("profiles")
+          .insert({ id: data.user.id, display_name: displayName, role: "technician" })
+          .select("role")
+          .single();
         if (profileError) throw profileError;
+        role = createdProfile.role;
       }
+
+      if (!isUserRole(role)) throw new Error("ไม่พบ role ที่รองรับในข้อมูลโปรไฟล์");
 
       router.push("/");
       router.refresh();
@@ -143,30 +142,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <span>ยืนยันรหัสผ่าน</span>
           <input name="confirmPassword" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" minLength={8} autoComplete="new-password" required />
         </label>
-      )}
-
-      {isRegister && (
-        <div className="register-role-field">
-          <span className="register-field-label">คุณเป็นใคร?</span>
-          <div className="register-role-grid">
-            {([
-              ["student", "นักเรียน", "เรียนบทเรียนและทำแบบฝึกหัด"],
-              ["teacher", "ครู", "จัดการบทเรียนและติดตามนักเรียน"],
-              ["admin", "แอดมิน", "จัดการระบบและผู้ใช้งานทั้งหมด"],
-            ] as const).map(([role, title, description]) => (
-              <button
-                className={`register-role-button${selectedRole === role ? " selected" : ""}`}
-                type="button"
-                key={role}
-                onClick={() => setSelectedRole(role)}
-              >
-                <strong>{title}</strong>
-                <small>{description}</small>
-              </button>
-            ))}
-          </div>
-          <input type="hidden" name="role" value={selectedRole} />
-        </div>
       )}
 
       {!isRegister && (
