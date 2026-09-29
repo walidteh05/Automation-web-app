@@ -1,19 +1,19 @@
 import Link from "next/link";
 
 type AutomationSidebarProps = {
-  activeItem: "dashboard" | "machines" | "alarms";
+  activeItem: "dashboard" | "machines" | "alarms" | "maintenance";
 };
 
 export default function AutomationSidebar({ activeItem }: AutomationSidebarProps) {
   return (
     <aside className="ams-sidebar">
-      <Link className="ams-brand" href="/" aria-label="Automation Management System dashboard">
+      <Link className="ams-brand" href="/" aria-label="Dashboard ระบบ Automation Management System">
         <span className="ams-brand-mark" aria-hidden="true"><i /><i /><i /><i /></span>
-        <span className="ams-brand-copy"><strong>AMS</strong><small>PLANT OPERATIONS</small></span>
+        <span className="ams-brand-copy"><strong>AMS</strong><small>ปฏิบัติการโรงงาน</small></span>
       </Link>
 
-      <div className="ams-nav-label">WORKSPACE</div>
-      <nav className="ams-navigation" aria-label="Main navigation">
+      <div className="ams-nav-label">พื้นที่ระบบ</div>
+      <nav className="ams-navigation" aria-label="เมนูหลัก">
         <Link className={`ams-nav-link${activeItem === "dashboard" ? " is-active" : ""}`} href="/" aria-current={activeItem === "dashboard" ? "page" : undefined}>
           <span className="ams-nav-glyph">01</span>Dashboard
         </Link>
@@ -23,12 +23,14 @@ export default function AutomationSidebar({ activeItem }: AutomationSidebarProps
         <Link className={`ams-nav-link${activeItem === "alarms" ? " is-active" : ""}`} href="/alarms" aria-current={activeItem === "alarms" ? "page" : undefined}>
           <span className="ams-nav-glyph">03</span>Alarms
         </Link>
-        <Link className="ams-nav-link" href="/#maintenance"><span className="ams-nav-glyph">04</span>Maintenance</Link>
+        <Link className={`ams-nav-link${activeItem === "maintenance" ? " is-active" : ""}`} href="/maintenance" aria-current={activeItem === "maintenance" ? "page" : undefined}>
+          <span className="ams-nav-glyph">04</span>Maintenance
+        </Link>
       </nav>
 
       <div className="ams-sidebar-foot">
         <span className="ams-online-dot" />
-        <span><strong>Plant network</strong><small>Operational</small></span>
+        <span><strong>เครือข่ายโรงงาน</strong><small>พร้อมใช้งาน</small></span>
       </div>
     </aside>
   );

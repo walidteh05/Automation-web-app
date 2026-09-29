@@ -19,8 +19,8 @@ const kanit = Kanit({
 });
 
 export const metadata: Metadata = {
-  title: "Base Learning",
-  description: "คู่มือการคำนวณเลขฐาน",
+  title: "Automation Management System",
+  description: "ระบบบริหารจัดการเครื่องจักร Alarm และงานซ่อมบำรุง",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

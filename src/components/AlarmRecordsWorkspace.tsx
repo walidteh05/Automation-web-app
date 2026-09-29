@@ -37,16 +37,16 @@ type AlarmDraft = {
 };
 
 const statusFilters: { value: AlarmStatusFilter; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  { value: "open", label: "Open" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "closed", label: "Closed" },
+  { value: "all", label: "ทุกสถานะ" },
+  { value: "open", label: "เปิด" },
+  { value: "in_progress", label: "กำลังดำเนินการ" },
+  { value: "closed", label: "ปิดแล้ว" },
 ];
 
 const statuses: { value: AlarmStatus; label: string }[] = [
-  { value: "open", label: "Open" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "closed", label: "Closed" },
+  { value: "open", label: "เปิด" },
+  { value: "in_progress", label: "กำลังดำเนินการ" },
+  { value: "closed", label: "ปิดแล้ว" },
 ];
 
 function toDatetimeLocal(value: Date) {
@@ -55,17 +55,19 @@ function toDatetimeLocal(value: Date) {
 }
 
 function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat("th-TH", {
     dateStyle: "medium",
     timeStyle: "short",
+    calendar: "gregory",
+    numberingSystem: "latn",
   }).format(new Date(value));
 }
 
 function friendlyError(error: { code?: string; message?: string }) {
-  if (error.code === "42501") return "Supabase denied this action. Check your account permissions.";
-  if (error.code === "23503") return "The selected machine or user is no longer available.";
-  if (error.code === "23514") return "The selected status is not supported.";
-  return "Unable to save the alarm. Please check the information and try again.";
+  if (error.code === "42501") return "ไม่มีสิทธิ์ดำเนินการนี้ โปรดตรวจสอบสิทธิ์บัญชีผู้ใช้";
+  if (error.code === "23503") return "ไม่พบเครื่องจักรหรือผู้ใช้ที่เลือกแล้ว";
+  if (error.code === "23514") return "สถานะที่เลือกไม่รองรับ";
+  return "บันทึก Alarm ไม่สำเร็จ โปรดตรวจสอบข้อมูลแล้วลองอีกครั้ง";
 }
 
 export default function AlarmRecordsWorkspace() {
@@ -99,7 +101,7 @@ export default function AlarmRecordsWorkspace() {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         const currentUserId = sessionData.session?.user.id;
-        if (!currentUserId) throw new Error("No authenticated user");
+        if (!currentUserId) throw new Error("ไม่พบผู้ใช้ที่เข้าสู่ระบบ");
 
         const [profileResult, machinesResult, alarmsResult] = await Promise.all([
           supabase.from("profiles").select("role").eq("id", currentUserId).maybeSingle(),
@@ -115,7 +117,7 @@ export default function AlarmRecordsWorkspace() {
         if (alarmsResult.error) throw alarmsResult.error;
 
         if (!profileResult.data || !["admin", "technician"].includes(profileResult.data.role)) {
-          throw new Error("Unable to verify account role");
+          throw new Error("ไม่สามารถตรวจสอบสิทธิ์บัญชีได้");
         }
 
         if (isMounted) {
@@ -125,7 +127,7 @@ export default function AlarmRecordsWorkspace() {
           setAlarms((alarmsResult.data ?? []) as AlarmRecord[]);
         }
       } catch {
-        if (isMounted) setError("Unable to load alarm records. Check your connection and access permissions.");
+        if (isMounted) setError("โหลดข้อมูล Alarm ไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่อและสิทธิ์การใช้งาน");
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -207,11 +209,11 @@ export default function AlarmRecordsWorkspace() {
     const alarmDescription = draft.alarm_description.trim();
     const occurredAt = new Date(draft.occurred_at);
     if (!draft.machine_id || !alarmCode || !alarmDescription || !draft.occurred_at || Number.isNaN(occurredAt.getTime())) {
-      setFormError("Choose a machine and complete the alarm code, description, and date/time.");
+      setFormError("กรุณาเลือกเครื่องจักรและกรอกรหัส Alarm รายละเอียด และวันที่เกิดให้ครบถ้วน");
       return;
     }
     if (!statuses.some((option) => option.value === draft.status)) {
-      setFormError("Select a valid alarm status.");
+      setFormError("โปรดเลือกสถานะ Alarm ที่รองรับ");
       return;
     }
 
@@ -234,7 +236,7 @@ export default function AlarmRecordsWorkspace() {
 
       setDraft(null);
       setEditingId(null);
-      setNotice(editingId ? "Alarm record updated." : "Alarm record added.");
+      setNotice(editingId ? "แก้ไขรายการ Alarm สำเร็จ" : "เพิ่มรายการ Alarm สำเร็จ");
       reloadRecords();
     } catch (saveError) {
       setFormError(friendlyError(saveError as { code?: string; message?: string }));
@@ -244,7 +246,7 @@ export default function AlarmRecordsWorkspace() {
   }
 
   async function deleteAlarm(alarm: AlarmRecord) {
-    if (!isAdmin || !window.confirm(`Delete alarm ${alarm.alarm_code}? This action cannot be undone.`)) return;
+    if (!isAdmin || !window.confirm(`ต้องการลบ Alarm ${alarm.alarm_code} หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้`)) return;
 
     setDeletingId(alarm.id);
     setNotice("");
@@ -255,9 +257,9 @@ export default function AlarmRecordsWorkspace() {
         .eq("id", alarm.id);
       if (deleteError) throw deleteError;
       setAlarms((current) => current.filter((item) => item.id !== alarm.id));
-      setNotice(`${alarm.alarm_code} deleted.`);
+      setNotice(`ลบ Alarm ${alarm.alarm_code} แล้ว`);
     } catch {
-      setError("Unable to delete this alarm. Check your access permissions and try again.");
+      setError("ลบ Alarm ไม่สำเร็จ โปรดตรวจสอบสิทธิ์แล้วลองอีกครั้ง");
     } finally {
       setDeletingId(null);
     }
@@ -268,70 +270,70 @@ export default function AlarmRecordsWorkspace() {
       <AutomationSidebar activeItem="alarms" />
       <div className="ams-workspace">
         <header className="ams-topbar">
-          <div className="ams-breadcrumb"><span>OPERATIONS</span><b>/</b><strong>ALARMS</strong></div>
-          <div className="ams-topbar-meta"><span className="ams-readonly-tag">ALARM RECORDS</span><AuthControls /></div>
+          <div className="ams-breadcrumb"><span>ปฏิบัติการ</span><b>/</b><strong>Alarms</strong></div>
+          <div className="ams-topbar-meta"><span className="ams-readonly-tag">รายการ Alarm</span><AuthControls /></div>
         </header>
 
         <main className="ams-main ams-alarms-main">
           <section className="ams-heading-row ams-alarms-heading">
             <div>
-              <p className="ams-eyebrow">EVENT LOG</p>
-              <h1>Alarm records</h1>
-              <p className="ams-subtitle">Review and track machine events across the plant.</p>
+              <p className="ams-eyebrow">บันทึกเหตุการณ์</p>
+              <h1>Alarms</h1>
+              <p className="ams-subtitle">ตรวจสอบและติดตาม Alarm ของเครื่องจักรภายในโรงงาน</p>
             </div>
             <div className="ams-alarm-heading-actions">
-              <div className="ams-machine-count"><strong>{filteredAlarms.length}</strong><span>RECORDS SHOWN</span></div>
-              {!isRoleLoading && canManage && <button className="ams-add-machine-button" type="button" onClick={openCreateForm}><span aria-hidden="true">+</span> Add Alarm</button>}
+              <div className="ams-machine-count"><strong>{filteredAlarms.length}</strong><span>รายการที่แสดง</span></div>
+              {!isRoleLoading && canManage && <button className="ams-add-machine-button" type="button" onClick={openCreateForm}><span aria-hidden="true">+</span> เพิ่ม Alarm</button>}
             </div>
           </section>
 
           {notice && <p className="ams-inline-notice" role="status">{notice}</p>}
           {error && <p className="ams-inline-error" role="alert">{error}</p>}
 
-          <section className="ams-machine-browser" aria-label="Alarm records">
+          <section className="ams-machine-browser" aria-label="รายการ Alarm">
             <div className="ams-machine-toolbar ams-alarm-toolbar">
               <label className="ams-search-field">
                 <span aria-hidden="true">⌕</span>
-                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search code, description, or machine" aria-label="Search alarm code, description, machine code, or machine name" />
+                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหารหัส รายละเอียด หรือเครื่องจักร" aria-label="ค้นหารหัส Alarm รายละเอียด รหัสเครื่องจักร หรือชื่อเครื่องจักร" />
               </label>
-              <label className="ams-status-filter"><span>Status</span>
-                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AlarmStatusFilter)} aria-label="Filter alarms by status">
+              <label className="ams-status-filter"><span>สถานะ</span>
+                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AlarmStatusFilter)} aria-label="กรอง Alarm ตามสถานะ">
                   {statusFilters.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
-              <label className="ams-status-filter"><span>Machine</span>
-                <select value={machineFilter} onChange={(event) => setMachineFilter(event.target.value)} aria-label="Filter alarms by machine">
-                  <option value="all">All machines</option>
+              <label className="ams-status-filter"><span>เครื่องจักร</span>
+                <select value={machineFilter} onChange={(event) => setMachineFilter(event.target.value)} aria-label="กรอง Alarm ตามเครื่องจักร">
+                  <option value="all">เครื่องจักรทั้งหมด</option>
                   {machines.map((machine) => <option key={machine.id} value={machine.id}>{machine.machine_code} · {machine.machine_name}</option>)}
                 </select>
               </label>
-              <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> Refresh</button>
+              <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
             </div>
 
             <div className="ams-table-scroll">
               <table className="ams-table ams-alarm-table">
-                <thead><tr><th>Alarm Code</th><th>Machine</th><th>Description</th><th>Occurred At</th><th>Cause</th><th>Status</th><th>Created By</th><th>Actions</th></tr></thead>
+                <thead><tr><th>รหัส Alarm</th><th>เครื่องจักร</th><th>รายละเอียด</th><th>วันที่เกิด</th><th>สาเหตุ</th><th>สถานะ</th><th>ผู้บันทึก</th><th>จัดการ</th></tr></thead>
                 <tbody>
                   {isLoading ? (
-                    <tr><td className="ams-table-message" colSpan={8}>Loading alarm records...</td></tr>
+                    <tr><td className="ams-table-message" colSpan={8}>กำลังโหลดข้อมูล...</td></tr>
                   ) : error && alarms.length === 0 ? (
                     <tr><td className="ams-table-message is-error" colSpan={8}>{error}</td></tr>
                   ) : filteredAlarms.length === 0 ? (
-                    <tr><td className="ams-table-message" colSpan={8}>{alarms.length === 0 ? "No alarm records found." : "No alarms match these filters."}</td></tr>
+                    <tr><td className="ams-table-message" colSpan={8}>{alarms.length === 0 ? "ไม่พบข้อมูล Alarm" : "ไม่พบ Alarm ที่ตรงกับตัวกรอง"}</td></tr>
                   ) : (
                     filteredAlarms.map((alarm) => (
                       <tr key={alarm.id}>
                         <td><strong className="ams-code">{alarm.alarm_code}</strong></td>
-                        <td><span className="ams-alarm-machine-code">{alarm.machine?.machine_code ?? "Machine unavailable"}</span><small className="ams-alarm-machine-name">{alarm.machine?.machine_name ?? alarm.machine_id}</small></td>
+                        <td><span className="ams-alarm-machine-code">{alarm.machine?.machine_code ?? "ไม่พบข้อมูลเครื่องจักร"}</span><small className="ams-alarm-machine-name">{alarm.machine?.machine_name ?? ""}</small></td>
                         <td className="ams-description">{alarm.alarm_description}</td>
                         <td><time dateTime={alarm.occurred_at}>{formatDateTime(alarm.occurred_at)}</time></td>
                         <td className="ams-description">{alarm.cause || "—"}</td>
                         <td><span className={`ams-status-pill is-${alarm.status.replace("_", "-")}`}>{statuses.find((item) => item.value === alarm.status)?.label}</span></td>
-                        <td>{alarm.creator?.display_name ?? (alarm.created_by ? `${alarm.created_by.slice(0, 8)}…` : "System")}</td>
+                        <td>{alarm.creator?.display_name ?? (alarm.created_by ? `${alarm.created_by.slice(0, 8)}…` : "ระบบ")}</td>
                         <td><div className="ams-machine-actions">
-                          {canManage && <button type="button" onClick={() => openEditForm(alarm)} aria-label={`Edit ${alarm.alarm_code}`}>Edit</button>}
-                          {isAdmin && <button type="button" className="is-delete" onClick={() => deleteAlarm(alarm)} disabled={deletingId === alarm.id} aria-label={`Delete ${alarm.alarm_code}`}>{deletingId === alarm.id ? "Deleting" : "Delete"}</button>}
-                          {!canManage && <span className="ams-action-placeholder" aria-label="Read only">—</span>}
+                          {canManage && <button type="button" onClick={() => openEditForm(alarm)} aria-label={`แก้ไข ${alarm.alarm_code}`}>แก้ไข</button>}
+                          {isAdmin && <button type="button" className="is-delete" onClick={() => deleteAlarm(alarm)} disabled={deletingId === alarm.id} aria-label={`ลบ ${alarm.alarm_code}`}>{deletingId === alarm.id ? "กำลังลบ" : "ลบ"}</button>}
+                          {!canManage && <span className="ams-action-placeholder" aria-label="ดูข้อมูลได้อย่างเดียว">—</span>}
                         </div></td>
                       </tr>
                     ))
@@ -339,37 +341,37 @@ export default function AlarmRecordsWorkspace() {
                 </tbody>
               </table>
             </div>
-            <div className="ams-machine-table-foot"><span>Showing {filteredAlarms.length} of {alarms.length} alarm records</span><span>{isAdmin ? "ADMIN ACCESS" : role === "technician" ? "TECHNICIAN ACCESS" : "ROLE UNAVAILABLE"}</span></div>
+            <div className="ams-machine-table-foot"><span>แสดง {filteredAlarms.length} จาก {alarms.length} รายการ Alarm</span><span>{isAdmin ? "Admin: จัดการได้" : role === "technician" ? "Technician: จัดการได้" : "ไม่มีข้อมูลสิทธิ์"}</span></div>
           </section>
 
           {draft && (
             <div className="ams-modal-backdrop">
               <form className="ams-machine-form ams-alarm-form" onSubmit={saveAlarm} aria-labelledby="alarm-form-title" role="dialog" aria-modal="true">
                 <div className="ams-form-heading">
-                  <div><p className="ams-eyebrow">ALARM RECORD</p><h2 id="alarm-form-title">{editingId ? "Edit Alarm" : "Add Alarm"}</h2></div>
-                  <button className="ams-modal-close" type="button" onClick={closeForm} disabled={isSaving} aria-label="Close form">×</button>
+                  <div><p className="ams-eyebrow">รายการ Alarm</p><h2 id="alarm-form-title">{editingId ? "แก้ไข Alarm" : "เพิ่ม Alarm"}</h2></div>
+                  <button className="ams-modal-close" type="button" onClick={closeForm} disabled={isSaving} aria-label="ปิดแบบฟอร์ม">×</button>
                 </div>
                 {formError && <p className="ams-form-error" role="alert">{formError}</p>}
                 <div className="ams-form-grid">
-                  <label className="ams-form-field ams-form-field-wide"><span>Machine <b>*</b></span>
+                  <label className="ams-form-field ams-form-field-wide"><span>เครื่องจักร <b>*</b></span>
                     <select required value={draft.machine_id} onChange={(event) => updateDraft("machine_id", event.target.value)}>
-                      <option value="">Select active machine</option>
+                      <option value="">เลือกเครื่องจักรที่ใช้งาน</option>
                       {machines.map((machine) => <option key={machine.id} value={machine.id}>{machine.machine_code} · {machine.machine_name}</option>)}
                     </select>
                   </label>
-                  <label className="ams-form-field"><span>Alarm Code <b>*</b></span><input autoFocus required maxLength={100} value={draft.alarm_code} onChange={(event) => updateDraft("alarm_code", event.target.value)} /></label>
-                  <label className="ams-form-field"><span>Status <b>*</b></span>
+                  <label className="ams-form-field"><span>รหัส Alarm <b>*</b></span><input autoFocus required maxLength={100} value={draft.alarm_code} onChange={(event) => updateDraft("alarm_code", event.target.value)} /></label>
+                  <label className="ams-form-field"><span>สถานะ <b>*</b></span>
                     <select required value={draft.status} onChange={(event) => updateDraft("status", event.target.value as AlarmStatus)}>
                       {statuses.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
                   </label>
-                  <label className="ams-form-field ams-form-field-wide"><span>Alarm Description <b>*</b></span><textarea required maxLength={1000} rows={3} value={draft.alarm_description} onChange={(event) => updateDraft("alarm_description", event.target.value)} /></label>
-                  <label className="ams-form-field"><span>Occurred At <b>*</b></span><input type="datetime-local" required value={draft.occurred_at} onChange={(event) => updateDraft("occurred_at", event.target.value)} /></label>
-                  <label className="ams-form-field"><span>Cause</span><textarea maxLength={1000} rows={2} value={draft.cause} onChange={(event) => updateDraft("cause", event.target.value)} /></label>
+                  <label className="ams-form-field ams-form-field-wide"><span>รายละเอียด Alarm <b>*</b></span><textarea required maxLength={1000} rows={3} value={draft.alarm_description} onChange={(event) => updateDraft("alarm_description", event.target.value)} /></label>
+                  <label className="ams-form-field"><span>วันที่เกิด <b>*</b></span><input type="datetime-local" required value={draft.occurred_at} onChange={(event) => updateDraft("occurred_at", event.target.value)} /></label>
+                  <label className="ams-form-field"><span>สาเหตุ</span><textarea maxLength={1000} rows={2} value={draft.cause} onChange={(event) => updateDraft("cause", event.target.value)} /></label>
                 </div>
                 <div className="ams-form-actions">
-                  <button className="ams-form-cancel" type="button" onClick={closeForm} disabled={isSaving}>Cancel</button>
-                  <button className="ams-form-save" type="submit" disabled={isSaving}>{isSaving ? "Saving..." : "Save Alarm"}</button>
+                  <button className="ams-form-cancel" type="button" onClick={closeForm} disabled={isSaving}>ยกเลิก</button>
+                  <button className="ams-form-save" type="submit" disabled={isSaving}>{isSaving ? "กำลังบันทึก..." : "บันทึก Alarm"}</button>
                 </div>
               </form>
             </div>

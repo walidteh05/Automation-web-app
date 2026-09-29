@@ -120,6 +120,57 @@ type Database = {
           },
         ];
       };
+      maintenance_records: {
+        Row: {
+          id: string;
+          machine_id: string;
+          technician_id: string;
+          description: string;
+          work_performed: string | null;
+          maintenance_at: string;
+          status: "planned" | "in_progress" | "completed" | "cancelled";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          machine_id: string;
+          technician_id: string;
+          description: string;
+          work_performed?: string | null;
+          maintenance_at?: string;
+          status?: "planned" | "in_progress" | "completed" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          machine_id?: string;
+          technician_id?: string;
+          description?: string;
+          work_performed?: string | null;
+          maintenance_at?: string;
+          status?: "planned" | "in_progress" | "completed" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_records_machine_id_fkey";
+            columns: ["machine_id"];
+            isOneToOne: false;
+            referencedRelation: "machines";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "maintenance_records_technician_id_fkey";
+            columns: ["technician_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

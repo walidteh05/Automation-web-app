@@ -71,15 +71,10 @@ export default function HomeAuthGuard({ children, allowedRoles }: HomeAuthGuardP
     };
   }, [allowedRoles, router]);
 
-  if (guardState.status === "loading") {
-    return <p role="status" aria-live="polite">กำลังตรวจสอบสิทธิ์...</p>;
-  }
-  if (guardState.status === "redirecting") {
-    return <p role="status" aria-live="polite">กำลังนำคุณไปหน้าเข้าสู่ระบบ...</p>;
-  }
+  if (guardState.status === "loading" || guardState.status === "redirecting") return null;
   if (guardState.status === "error") return <p role="alert">{guardState.message}</p>;
   if (guardState.status === "unauthorized") {
-    return <p role="alert">บัญชีนี้ไม่มี role ที่ได้รับอนุญาตให้เข้าถึงหน้านี้</p>;
+    return <p role="alert">บัญชีนี้ไม่มีสิทธิ์เข้าถึงหน้านี้</p>;
   }
   return children;
 }

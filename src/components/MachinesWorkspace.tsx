@@ -20,18 +20,18 @@ type Machine = {
 type MachineDraft = Omit<Machine, "id">;
 
 const statusOptions: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  { value: "running", label: "Running" },
-  { value: "stop", label: "Stop" },
-  { value: "alarm", label: "Alarm" },
-  { value: "maintenance", label: "Maintenance" },
+  { value: "all", label: "ทุกสถานะ" },
+  { value: "running", label: "กำลังทำงาน" },
+  { value: "stop", label: "หยุดทำงาน" },
+  { value: "alarm", label: "เกิด Alarm" },
+  { value: "maintenance", label: "ซ่อมบำรุง" },
 ];
 
 const statusLabels: Record<MachineStatus, string> = {
-  running: "Running",
-  stop: "Stop",
-  alarm: "Alarm",
-  maintenance: "Maintenance",
+  running: "กำลังทำงาน",
+  stop: "หยุดทำงาน",
+  alarm: "เกิด Alarm",
+  maintenance: "ซ่อมบำรุง",
 };
 
 const emptyDraft: MachineDraft = {
@@ -69,7 +69,7 @@ export default function MachinesWorkspace() {
         const supabase = getSupabaseClient();
         const { data: sessionData } = await supabase.auth.getSession();
         const userId = sessionData.session?.user.id;
-        if (!userId) throw new Error("No authenticated user");
+        if (!userId) throw new Error("ไม่พบผู้ใช้ที่เข้าสู่ระบบ");
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -81,7 +81,7 @@ export default function MachinesWorkspace() {
           setRole(profile?.role === "admin" || profile?.role === "technician" ? profile.role : null);
         }
       } catch {
-        if (isMounted) setRoleError("Unable to load your role. Machine management actions are disabled.");
+        if (isMounted) setRoleError("โหลดสิทธิ์ผู้ใช้ไม่สำเร็จ จึงปิดการจัดการเครื่องจักรไว้ชั่วคราว");
       } finally {
         if (isMounted) setIsRoleLoading(false);
       }
@@ -192,7 +192,7 @@ export default function MachinesWorkspace() {
         .maybeSingle();
       if (duplicateError) throw duplicateError;
       if (duplicate && duplicate.id !== editingId) {
-        setFormError("Machine Code นี้ถูกใช้แล้ว กรุณาระบุรหัสอื่น");
+        setFormError("รหัสเครื่องจักรนี้ถูกใช้แล้ว กรุณาระบุรหัสอื่น");
         return;
       }
 
@@ -201,7 +201,7 @@ export default function MachinesWorkspace() {
         : await supabase.from("machines").insert(values);
       if (result.error) {
         if (result.error.code === "23505") {
-          setFormError("Machine Code นี้ถูกใช้แล้ว กรุณาระบุรหัสอื่น");
+          setFormError("รหัสเครื่องจักรนี้ถูกใช้แล้ว กรุณาระบุรหัสอื่น");
           return;
         }
         throw result.error;
@@ -209,17 +209,17 @@ export default function MachinesWorkspace() {
 
       setDraft(null);
       setEditingId(null);
-      setNotice(editingId ? "Machine updated successfully." : "Machine added successfully.");
+      setNotice(editingId ? "แก้ไขข้อมูลเครื่องจักรสำเร็จ" : "เพิ่มเครื่องจักรสำเร็จ");
       retryLoad();
     } catch {
-      setFormError("บันทึกข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์และลองอีกครั้ง");
+      setFormError("บันทึกข้อมูลไม่สำเร็จ โปรดตรวจสอบสิทธิ์แล้วลองอีกครั้ง");
     } finally {
       setIsSaving(false);
     }
   }
 
   async function softDeleteMachine(machine: Machine) {
-    if (!isAdmin || !window.confirm(`ยืนยันการนำ ${machine.machine_code} ออกจากรายการเครื่องที่ใช้งาน? ประวัติจะยังคงอยู่`)) return;
+    if (!isAdmin || !window.confirm(`ต้องการลบเครื่องจักร ${machine.machine_code} ออกจากรายการใช้งานหรือไม่? ประวัติเดิมจะยังคงอยู่`)) return;
 
     setDeletingId(machine.id);
     setNotice("");
@@ -232,9 +232,9 @@ export default function MachinesWorkspace() {
       if (deleteError) throw deleteError;
 
       setMachines((current) => current.filter((item) => item.id !== machine.id));
-      setNotice(`${machine.machine_code} moved out of the active machine list.`);
+      setNotice(`นำ ${machine.machine_code} ออกจากรายการเครื่องจักรที่ใช้งานแล้ว`);
     } catch {
-      setError("Could not archive this machine. Check your access permissions and try again.");
+      setError("นำเครื่องจักรออกจากรายการไม่สำเร็จ โปรดตรวจสอบสิทธิ์แล้วลองอีกครั้ง");
     } finally {
       setDeletingId(null);
     }
@@ -245,27 +245,27 @@ export default function MachinesWorkspace() {
       <AutomationSidebar activeItem="machines" />
       <div className="ams-workspace">
         <header className="ams-topbar">
-          <div className="ams-breadcrumb"><span>OPERATIONS</span><b>/</b><strong>MACHINES</strong></div>
-          <div className="ams-topbar-meta"><span className="ams-readonly-tag">MACHINE MASTER</span><AuthControls /></div>
+          <div className="ams-breadcrumb"><span>ปฏิบัติการ</span><b>/</b><strong>Machines</strong></div>
+          <div className="ams-topbar-meta"><span className="ams-readonly-tag">ข้อมูลหลักเครื่องจักร</span><AuthControls /></div>
         </header>
 
         <main className="ams-main ams-machines-main">
           <section className="ams-heading-row ams-machines-heading">
             <div>
-              <p className="ams-eyebrow">ASSET REGISTER</p>
+              <p className="ams-eyebrow">ทะเบียนเครื่องจักร</p>
               <h1>Machines</h1>
-              <p className="ams-subtitle">Machine master data across the plant.</p>
+              <p className="ams-subtitle">ข้อมูลเครื่องจักรทั้งหมดภายในโรงงาน</p>
             </div>
             <div className="ams-machines-heading-actions">
-              <div className="ams-machine-count"><strong>{filteredMachines.length}</strong><span>ACTIVE MACHINES</span></div>
-              {!isRoleLoading && isAdmin && <button className="ams-add-machine-button" type="button" onClick={openCreateForm}><span aria-hidden="true">+</span> Add Machine</button>}
+              <div className="ams-machine-count"><strong>{filteredMachines.length}</strong><span>เครื่องจักรที่ใช้งาน</span></div>
+              {!isRoleLoading && isAdmin && <button className="ams-add-machine-button" type="button" onClick={openCreateForm}><span aria-hidden="true">+</span> เพิ่มเครื่องจักร</button>}
             </div>
           </section>
 
           {roleError && <p className="ams-inline-error" role="alert">{roleError}</p>}
           {notice && <p className="ams-inline-notice" role="status">{notice}</p>}
 
-          <section className="ams-machine-browser" aria-label="Machine master list">
+          <section className="ams-machine-browser" aria-label="รายการเครื่องจักร">
             <div className="ams-machine-toolbar">
               <label className="ams-search-field">
                 <span aria-hidden="true">⌕</span>
@@ -273,33 +273,33 @@ export default function MachinesWorkspace() {
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search code, name, or location"
-                  aria-label="Search machine code, name, or location"
+                  placeholder="ค้นหารหัส ชื่อ หรือสถานที่ติดตั้ง"
+                  aria-label="ค้นหารหัสเครื่องจักร ชื่อเครื่องจักร หรือสถานที่ติดตั้ง"
                 />
               </label>
               <label className="ams-status-filter">
-                <span>Status</span>
-                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)} aria-label="Filter machines by status">
+                <span>สถานะ</span>
+                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)} aria-label="กรองเครื่องจักรตามสถานะ">
                   {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
               <button className="ams-refresh-button" type="button" onClick={retryLoad} disabled={isLoading}>
-                <span aria-hidden="true">↻</span> Refresh
+                <span aria-hidden="true">↻</span> โหลดใหม่
               </button>
             </div>
 
             <div className="ams-table-scroll">
               <table className="ams-table ams-machines-table">
                 <thead>
-                  <tr><th>Machine Code</th><th>Machine Name</th><th>Machine Type</th><th>Location</th><th>Status</th><th>Actions</th></tr>
+                  <tr><th>รหัสเครื่องจักร</th><th>ชื่อเครื่องจักร</th><th>ประเภทเครื่องจักร</th><th>สถานที่ติดตั้ง</th><th>สถานะ</th><th>จัดการ</th></tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
-                    <tr><td className="ams-table-message" colSpan={6}>Loading machines...</td></tr>
+                    <tr><td className="ams-table-message" colSpan={6}>กำลังโหลดข้อมูล...</td></tr>
                   ) : error ? (
                     <tr><td className="ams-table-message is-error" colSpan={6} role="alert">{error}</td></tr>
                   ) : filteredMachines.length === 0 ? (
-                    <tr><td className="ams-table-message" colSpan={6}>{machines.length === 0 ? "No active machines found." : "No machines match these filters."}</td></tr>
+                    <tr><td className="ams-table-message" colSpan={6}>{machines.length === 0 ? "ไม่พบเครื่องจักรที่ใช้งาน" : "ไม่พบเครื่องจักรที่ตรงกับตัวกรอง"}</td></tr>
                   ) : (
                     filteredMachines.map((machine) => (
                       <tr key={machine.id}>
@@ -311,12 +311,12 @@ export default function MachinesWorkspace() {
                         <td>
                           {isAdmin ? (
                             <div className="ams-machine-actions">
-                              <button type="button" onClick={() => openEditForm(machine)} aria-label={`Edit ${machine.machine_code}`}>Edit</button>
-                              <button type="button" className="is-delete" onClick={() => softDeleteMachine(machine)} disabled={deletingId === machine.id} aria-label={`Archive ${machine.machine_code}`}>
-                                {deletingId === machine.id ? "Archiving" : "Delete"}
+                              <button type="button" onClick={() => openEditForm(machine)} aria-label={`แก้ไข ${machine.machine_code}`}>แก้ไข</button>
+                              <button type="button" className="is-delete" onClick={() => softDeleteMachine(machine)} disabled={deletingId === machine.id} aria-label={`ลบ ${machine.machine_code}`}>
+                                {deletingId === machine.id ? "กำลังลบ" : "ลบ"}
                               </button>
                             </div>
-                          ) : <span className="ams-action-placeholder" aria-label="Read only">—</span>}
+                          ) : <span className="ams-action-placeholder" aria-label="ดูข้อมูลได้อย่างเดียว">—</span>}
                         </td>
                       </tr>
                     ))
@@ -324,25 +324,25 @@ export default function MachinesWorkspace() {
                 </tbody>
               </table>
             </div>
-            <div className="ams-machine-table-foot"><span>Showing {filteredMachines.length} of {machines.length} active machines</span><span>{isAdmin ? "ADMIN CONTROLS ENABLED" : "READ ONLY"}</span></div>
+            <div className="ams-machine-table-foot"><span>แสดง {filteredMachines.length} จาก {machines.length} เครื่องจักรที่ใช้งาน</span><span>{isAdmin ? "Admin จัดการได้" : "ดูข้อมูลได้อย่างเดียว"}</span></div>
           </section>
 
           {draft && (
             <div className="ams-modal-backdrop">
               <form className="ams-machine-form" onSubmit={saveMachine} aria-labelledby="machine-form-title" role="dialog" aria-modal="true">
                 <div className="ams-form-heading">
-                  <div><p className="ams-eyebrow">MACHINE MASTER</p><h2 id="machine-form-title">{editingId ? "Edit Machine" : "Add Machine"}</h2></div>
-                  <button className="ams-modal-close" type="button" onClick={closeForm} disabled={isSaving} aria-label="Close form">×</button>
+                  <div><p className="ams-eyebrow">ข้อมูลหลักเครื่องจักร</p><h2 id="machine-form-title">{editingId ? "แก้ไขเครื่องจักร" : "เพิ่มเครื่องจักร"}</h2></div>
+                  <button className="ams-modal-close" type="button" onClick={closeForm} disabled={isSaving} aria-label="ปิดแบบฟอร์ม">×</button>
                 </div>
 
                 {formError && <p className="ams-form-error" role="alert">{formError}</p>}
 
                 <div className="ams-form-grid">
-                  <label className="ams-form-field"><span>Machine Code <b>*</b></span><input autoFocus required maxLength={80} value={draft.machine_code} onChange={(event) => updateDraft("machine_code", event.target.value)} /></label>
-                  <label className="ams-form-field"><span>Machine Name <b>*</b></span><input required maxLength={160} value={draft.machine_name} onChange={(event) => updateDraft("machine_name", event.target.value)} /></label>
-                  <label className="ams-form-field"><span>Machine Type <b>*</b></span><input required maxLength={120} value={draft.machine_type} onChange={(event) => updateDraft("machine_type", event.target.value)} /></label>
-                  <label className="ams-form-field"><span>Location <b>*</b></span><input required maxLength={160} value={draft.location} onChange={(event) => updateDraft("location", event.target.value)} /></label>
-                  <label className="ams-form-field ams-form-field-wide"><span>Status <b>*</b></span>
+                  <label className="ams-form-field"><span>รหัสเครื่องจักร <b>*</b></span><input autoFocus required maxLength={80} value={draft.machine_code} onChange={(event) => updateDraft("machine_code", event.target.value)} /></label>
+                  <label className="ams-form-field"><span>ชื่อเครื่องจักร <b>*</b></span><input required maxLength={160} value={draft.machine_name} onChange={(event) => updateDraft("machine_name", event.target.value)} /></label>
+                  <label className="ams-form-field"><span>ประเภทเครื่องจักร <b>*</b></span><input required maxLength={120} value={draft.machine_type} onChange={(event) => updateDraft("machine_type", event.target.value)} /></label>
+                  <label className="ams-form-field"><span>สถานที่ติดตั้ง <b>*</b></span><input required maxLength={160} value={draft.location} onChange={(event) => updateDraft("location", event.target.value)} /></label>
+                  <label className="ams-form-field ams-form-field-wide"><span>สถานะ <b>*</b></span>
                     <select required value={draft.status} onChange={(event) => updateDraft("status", event.target.value as MachineStatus)}>
                       {statusOptions.filter((option) => option.value !== "all").map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
@@ -350,8 +350,8 @@ export default function MachinesWorkspace() {
                 </div>
 
                 <div className="ams-form-actions">
-                  <button className="ams-form-cancel" type="button" onClick={closeForm} disabled={isSaving}>Cancel</button>
-                  <button className="ams-form-save" type="submit" disabled={isSaving}>{isSaving ? "Saving..." : "Save Machine"}</button>
+                  <button className="ams-form-cancel" type="button" onClick={closeForm} disabled={isSaving}>ยกเลิก</button>
+                  <button className="ams-form-save" type="submit" disabled={isSaving}>{isSaving ? "กำลังบันทึก..." : "บันทึก"}</button>
                 </div>
               </form>
             </div>

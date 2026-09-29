@@ -9,6 +9,24 @@ type AuthFormProps = {
   mode: "login" | "register";
 };
 
+function getAuthErrorMessage(error: unknown, isRegister: boolean) {
+  if (!(error instanceof Error)) return "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
+
+  const message = error.message.toLowerCase();
+  if (message.includes("รหัสผ่านและการยืนยัน")) return "รหัสผ่านไม่ตรงกัน";
+  if (!isRegister && (message.includes("invalid login credentials") || message.includes("invalid_credentials"))) {
+    return "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+  }
+  if (!isRegister && message.includes("email not confirmed")) {
+    return "บัญชียังไม่ได้รับการยืนยัน โปรดตรวจสอบข้อความยืนยันจากระบบ";
+  }
+  if (isRegister && (message.includes("already registered") || message.includes("user already exists"))) {
+    return "อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น";
+  }
+
+  return "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
+}
+
 export default function AuthForm({ mode }: AuthFormProps) {
   const isRegister = mode === "register";
   const router = useRouter();
@@ -94,7 +112,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       router.push("/");
       router.refresh();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      setError(getAuthErrorMessage(submitError, isRegister));
     } finally {
       setIsLoading(false);
     }
@@ -106,20 +124,20 @@ export default function AuthForm({ mode }: AuthFormProps) {
       {!isRegister && error && <div className="login-error" role="alert"><span aria-hidden="true">!</span><p>{error}</p></div>}
       {isRegister && (
         <label className="auth-field">
-          <span>ชื่อที่ใช้แสดง</span>
+          <span>ชื่อผู้ใช้</span>
           <span className="register-input-wrap">
             <span className="register-field-icon" aria-hidden="true">●</span>
-            <input name="display_name" type="text" placeholder="สมชาย สายโค้ด" autoComplete="name" required />
+            <input name="display_name" type="text" placeholder="กรอกชื่อผู้ใช้" autoComplete="name" required onInvalid={(event) => event.currentTarget.setCustomValidity("กรุณากรอกชื่อผู้ใช้")} onInput={(event) => event.currentTarget.setCustomValidity("")} />
           </span>
         </label>
       )}
 
       <label className="auth-field">
-        <span>อีเมล</span>
+        <span>{isRegister ? "อีเมล" : "ชื่อผู้ใช้"}</span>
         <span className={isRegister ? "register-input-wrap" : "login-input-wrap"}>
           {isRegister && <span className="register-field-icon" aria-hidden="true">✉</span>}
           {!isRegister && <span className="login-field-icon" aria-hidden="true">✉</span>}
-          <input name="email" type="email" placeholder={isRegister ? "user@example.com" : "student@university.ac.th"} autoComplete="email" required />
+          <input name="email" type="email" placeholder={isRegister ? "user@company.com" : "กรอกชื่อผู้ใช้"} autoComplete="email" required onInvalid={(event) => event.currentTarget.setCustomValidity(isRegister ? event.currentTarget.validity.valueMissing ? "กรุณากรอกอีเมล" : "กรุณากรอกอีเมลให้ถูกต้อง" : "กรุณากรอกชื่อผู้ใช้")} onInput={(event) => event.currentTarget.setCustomValidity("")} />
         </span>
       </label>
 
@@ -128,7 +146,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <span className={`${isRegister ? "register-input-wrap" : "login-input-wrap password-input-wrap"}`}>
           {isRegister && <span className="register-field-icon register-lock-icon" aria-hidden="true">▣</span>}
           {!isRegister && <span className="login-field-icon login-lock-icon" aria-hidden="true">▣</span>}
-          <input name="password" type={showPassword ? "text" : "password"} placeholder="อย่างน้อย 8 ตัวอักษร" minLength={8} autoComplete={isRegister ? "new-password" : "current-password"} required />
+          <input name="password" type={showPassword ? "text" : "password"} placeholder="อย่างน้อย 8 ตัวอักษร" minLength={8} autoComplete={isRegister ? "new-password" : "current-password"} required onInvalid={(event) => event.currentTarget.setCustomValidity(event.currentTarget.validity.tooShort ? "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" : "กรุณากรอกรหัสผ่าน")} onInput={(event) => event.currentTarget.setCustomValidity("")} />
           {
             <button className="password-toggle" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}>
               {showPassword ? "ซ่อน" : "แสดง"}
@@ -140,7 +158,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       {isRegister && (
         <label className="auth-field">
           <span>ยืนยันรหัสผ่าน</span>
-          <input name="confirmPassword" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" minLength={8} autoComplete="new-password" required />
+          <input name="confirmPassword" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" minLength={8} autoComplete="new-password" required onInvalid={(event) => event.currentTarget.setCustomValidity(event.currentTarget.validity.tooShort ? "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" : "กรุณายืนยันรหัสผ่าน")} onInput={(event) => event.currentTarget.setCustomValidity("")} />
         </label>
       )}
 
@@ -151,7 +169,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       )}
 
       <button className="auth-submit" type="submit" disabled={isLoading}>
-        {isLoading ? "กำลังดำเนินการ..." : isRegister ? "สร้างบัญชี" : "เข้าสู่ระบบ"}
+        {isLoading ? isRegister ? "กำลังสมัครสมาชิก..." : "กำลังเข้าสู่ระบบ..." : isRegister ? "สมัครสมาชิก" : "เข้าสู่ระบบ"}
         <span aria-hidden="true">→</span>
       </button>
 
