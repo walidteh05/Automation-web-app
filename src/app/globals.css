@@ -915,6 +915,28 @@ button, input, select { font-family: inherit; }
   .ams-theme-toggle { right: 12px; bottom: 12px; min-height: 40px; padding: 0 12px; }
 }
 
+.approval-actions { display: grid; gap: 10px; }
+.approval-actions .auth-submit {
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 0;
+  border: 1px solid #234a35;
+  border-radius: 3px;
+  color: #f8fbf5;
+  background: #234a35;
+  box-shadow: 0 5px 12px rgb(24 48 32 / 12%);
+  font-size: 13px;
+  font-weight: 600;
+}
+.approval-actions .auth-submit:hover:not(:disabled) { background: #376a49; }
+.approval-actions .auth-submit:disabled { opacity: .6; cursor: wait; }
+.approval-actions .approval-secondary { border-color: #dce3dd; color: #315d40; background: #f8faf7; box-shadow: none; }
+.approval-actions .approval-secondary:hover:not(:disabled) { border-color: #9eb5a1; background: #edf3ed; }
+:root[data-theme="dark"] .approval-actions .auth-submit { border-color: #456b4d; color: #f1f6f1; background: #31583b; }
+:root[data-theme="dark"] .approval-actions .auth-submit:hover:not(:disabled) { border-color: #648c58; background: #416e49; }
+:root[data-theme="dark"] .approval-actions .approval-secondary { border-color: #45584a; color: #d8e3da; background: #24352a; }
+:root[data-theme="dark"] .approval-actions .approval-secondary:hover:not(:disabled) { border-color: #76936c; background: #304b37; }
+
 .ams-machine-actions .ams-history-button { border-color: #315b43; color: #315b43; background: #f2f6f1; }
 .ams-machine-actions .ams-history-button:hover:not(:disabled) { border-color: #467451; color: #244b32; background: #e7efe5; }
 .ams-history-backdrop { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 22px; background: rgb(17 30 22 / 62%); }

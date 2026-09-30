@@ -14,18 +14,21 @@ type Database = {
           id: string;
           display_name: string;
           role: UserRole;
+          approval_status: string;
           created_at: string;
         };
         Insert: {
           id: string;
           display_name: string;
           role?: UserRole;
+          approval_status?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           display_name?: string;
           role?: UserRole;
+          approval_status?: string;
           created_at?: string;
         };
         Relationships: [];
