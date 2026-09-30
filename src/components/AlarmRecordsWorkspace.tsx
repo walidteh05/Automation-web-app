@@ -320,28 +320,33 @@ export default function AlarmRecordsWorkspace() {
           {error && <p className="ams-inline-error" role="alert">{error}</p>}
 
           <section className="ams-machine-browser" aria-label="รายการ Alarm">
-            <div className="ams-machine-toolbar ams-alarm-toolbar">
-              <label className="ams-search-field">
-                <span aria-hidden="true">⌕</span>
-                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหารหัส รายละเอียด หรือเครื่องจักร" aria-label="ค้นหารหัส Alarm รายละเอียด รหัสเครื่องจักร หรือชื่อเครื่องจักร" />
+            <div className="ams-machine-toolbar ams-alarm-toolbar ams-record-filter-bar">
+              <label className="ams-filter-field">
+                <span>ค้นหา</span>
+                <span className="ams-search-field">
+                  <span aria-hidden="true">⌕</span>
+                  <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหารหัส รายละเอียด หรือเครื่องจักร" aria-label="ค้นหารหัส Alarm รายละเอียด รหัสเครื่องจักร หรือชื่อเครื่องจักร" />
+                </span>
               </label>
-              <label className="ams-status-filter"><span>สถานะ</span>
+              <label className="ams-filter-field ams-status-filter"><span>สถานะ</span>
                 <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AlarmStatusFilter)} aria-label="กรอง Alarm ตามสถานะ">
                   {statusFilters.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
-              <label className="ams-status-filter"><span>เครื่องจักร</span>
+              <label className="ams-filter-field ams-status-filter"><span>เครื่องจักร</span>
                 <select value={machineFilter} onChange={(event) => setMachineFilter(event.target.value)} aria-label="กรอง Alarm ตามเครื่องจักร">
                   <option value="all">เครื่องจักรทั้งหมด</option>
                   {machines.map((machine) => <option key={machine.id} value={machine.id}>{machine.machine_code} · {machine.machine_name}</option>)}
                 </select>
               </label>
-              <label className="ams-date-filter"><span>วันที่เริ่มต้น</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-label="วันที่เริ่มต้นสำหรับกรอง Alarm" /></label>
-              <label className="ams-date-filter"><span>วันที่สิ้นสุด</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-label="วันที่สิ้นสุดสำหรับกรอง Alarm" /></label>
-              <button className="ams-clear-filter-button" type="button" onClick={clearFilters}>ล้างตัวกรอง</button>
-              <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
-              <button className="ams-export-button" type="button" onClick={exportAlarms} disabled={isLoading || filteredAlarms.length === 0} aria-label="ส่งออก Alarm เป็น CSV"><span aria-hidden="true">↓</span> Export CSV</button>
-              {!isLoading && filteredAlarms.length === 0 && <span className="ams-export-empty" role="status">ไม่มีข้อมูลสำหรับส่งออก</span>}
+              <label className="ams-filter-field ams-date-filter"><span>วันที่เริ่มต้น</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-label="วันที่เริ่มต้นสำหรับกรอง Alarm" /></label>
+              <label className="ams-filter-field ams-date-filter"><span>วันที่สิ้นสุด</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-label="วันที่สิ้นสุดสำหรับกรอง Alarm" /></label>
+              <div className="ams-filter-actions">
+                <button className="ams-clear-filter-button" type="button" onClick={clearFilters}>ล้างตัวกรอง</button>
+                <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
+                <button className="ams-export-button" type="button" onClick={exportAlarms} disabled={isLoading || filteredAlarms.length === 0} aria-label="ส่งออก Alarm เป็น CSV"><span aria-hidden="true">↓</span> Export CSV</button>
+                {!isLoading && filteredAlarms.length === 0 && <span className="ams-export-empty" role="status">ไม่มีข้อมูลสำหรับส่งออก</span>}
+              </div>
               {!isDateRangeValid && <p className="ams-date-range-error" role="alert">วันที่เริ่มต้นต้องไม่อยู่หลังวันที่สิ้นสุด</p>}
             </div>
 

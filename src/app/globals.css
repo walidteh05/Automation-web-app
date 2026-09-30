@@ -180,6 +180,11 @@ body {
 .ams-machine-count span { margin-top: 4px; color: #849087; font-family: var(--font-geist-mono), monospace; font-size: 8px; }
 .ams-machine-browser { border: 1px solid var(--ams-line); background: var(--ams-paper); }
 .ams-machine-toolbar { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid #e5eae5; }
+.ams-record-filter-bar { display: grid; grid-template-columns: minmax(190px, 1.5fr) repeat(4, minmax(120px, 1fr)) auto; align-items: end; gap: 12px; }
+.ams-filter-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; color: #758178; font-size: 9px; }
+.ams-filter-field > span:first-child { line-height: 13px; }
+.ams-record-filter-bar .ams-search-field { flex: none; width: 100%; min-width: 0; height: 36px; }
+.ams-filter-actions { display: flex; align-items: flex-end; gap: 8px; }
 .ams-search-field { display: flex; flex: 1; align-items: center; gap: 9px; min-width: 160px; height: 36px; padding: 0 10px; border: 1px solid #dce3dd; background: #fff; }
 .ams-search-field > span { color: #748379; font-size: 18px; line-height: 1; }
 .ams-search-field input { width: 100%; min-width: 0; border: 0; outline: none; color: #304237; background: transparent; font-size: 11px; }
@@ -189,6 +194,8 @@ body {
 .ams-status-filter select { height: 36px; min-width: 142px; padding: 0 28px 0 9px; border: 1px solid #dce3dd; border-radius: 0; color: #3e5145; background: #fff; font-size: 10px; }
 .ams-date-filter { display: flex; flex: 1 1 145px; flex-direction: column; gap: 4px; min-width: 135px; color: #758178; font-size: 9px; }
 .ams-date-filter input { width: 100%; min-width: 0; height: 36px; padding: 0 8px; border: 1px solid #dce3dd; border-radius: 0; color: #3e5145; background: #fff; font-family: var(--font-geist-mono), monospace; font-size: 10px; }
+.ams-record-filter-bar .ams-status-filter { align-items: stretch; gap: 4px; font-size: 9px; }
+.ams-record-filter-bar .ams-status-filter select { width: 100%; min-width: 0; height: 36px; }
 .ams-date-filter input:focus-visible { border-color: #7e9b83; outline: 2px solid rgb(84 130 91 / 18%); outline-offset: 1px; }
 .ams-clear-filter-button { min-height: 36px; padding: 0 10px; border: 1px solid #dce3dd; color: #536158; background: #fff; font-size: 10px; white-space: nowrap; cursor: pointer; }
 .ams-clear-filter-button:hover { border-color: #9db69e; background: #f1f6ef; }
@@ -220,7 +227,7 @@ body {
 .ams-alarms-heading { align-items: center; margin-bottom: 22px; }
 .ams-alarm-heading-actions { display: flex; align-items: center; gap: 20px; }
 .ams-alarm-toolbar { flex-wrap: wrap; }
-.ams-alarm-toolbar .ams-status-filter select { min-width: 125px; }
+.ams-alarm-toolbar .ams-status-filter select { min-width: 0; }
 .ams-alarm-table { min-width: 1160px; }
 .ams-alarm-table th, .ams-alarm-table td { padding-right: 10px; padding-left: 10px; }
 .ams-alarm-table td { height: 58px; }
@@ -235,7 +242,7 @@ body {
 .ams-maintenance-heading { align-items: center; margin-bottom: 22px; }
 .ams-maintenance-heading-actions { display: flex; align-items: center; gap: 20px; }
 .ams-maintenance-toolbar { flex-wrap: wrap; }
-.ams-maintenance-toolbar .ams-status-filter select { min-width: 125px; }
+.ams-maintenance-toolbar .ams-status-filter select { min-width: 0; }
 .ams-maintenance-records-table { min-width: 1080px; }
 .ams-maintenance-records-table th, .ams-maintenance-records-table td { padding-right: 10px; padding-left: 10px; }
 .ams-maintenance-records-table td { height: 58px; }
@@ -325,6 +332,11 @@ body {
   .ams-table { min-width: 680px; }
   .ams-maintenance-table { min-width: 630px; }
   .ams-machine-toolbar { align-items: stretch; flex-wrap: wrap; gap: 8px; padding: 10px; }
+  .ams-record-filter-bar { grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 10px; }
+  .ams-filter-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .ams-filter-actions button { min-width: 0; padding-right: 6px; padding-left: 6px; }
+  .ams-filter-actions .ams-export-empty { grid-column: 1 / -1; }
+  .ams-record-filter-bar .ams-search-field { flex: none; min-width: 0; width: 100%; }
   .ams-search-field { flex-basis: 100%; }
   .ams-status-filter { flex: 1; justify-content: space-between; }
   .ams-status-filter select { flex: 1; }
@@ -332,16 +344,13 @@ body {
   .ams-machine-count { padding-left: 12px; }
   .ams-machines-heading-actions { width: 100%; justify-content: space-between; gap: 10px; }
   .ams-machine-form { padding: 18px; }
-  .ams-alarm-toolbar .ams-search-field { flex-basis: 100%; }
-  .ams-alarm-toolbar .ams-status-filter { flex: 1 1 140px; }
-  .ams-alarm-toolbar .ams-status-filter select { min-width: 0; width: 100%; }
-  .ams-alarm-toolbar .ams-date-filter { flex: 1 1 145px; min-width: 0; }
   .ams-alarm-heading-actions { width: 100%; justify-content: space-between; gap: 10px; }
-  .ams-maintenance-toolbar .ams-search-field { flex-basis: 100%; }
-  .ams-maintenance-toolbar .ams-status-filter { flex: 1 1 140px; }
-  .ams-maintenance-toolbar .ams-status-filter select { min-width: 0; width: 100%; }
-  .ams-maintenance-toolbar .ams-date-filter { flex: 1 1 145px; min-width: 0; }
   .ams-maintenance-heading-actions { width: 100%; justify-content: space-between; gap: 10px; }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .ams-record-filter-bar { grid-template-columns: minmax(180px, 1.5fr) repeat(2, minmax(135px, 1fr)); }
+  .ams-filter-actions { grid-column: 1 / -1; }
 }
 
 @media (max-width: 390px) {

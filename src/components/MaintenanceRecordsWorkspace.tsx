@@ -331,28 +331,33 @@ export default function MaintenanceRecordsWorkspace() {
           {error && <p className="ams-inline-error" role="alert">{error}</p>}
 
           <section className="ams-machine-browser" aria-label="รายการซ่อมบำรุง">
-            <div className="ams-machine-toolbar ams-maintenance-toolbar">
-              <label className="ams-search-field">
-                <span aria-hidden="true">⌕</span>
-                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหาเครื่องจักร รายละเอียด หรือช่าง" aria-label="ค้นหารหัสเครื่องจักร ชื่อเครื่องจักร รายละเอียด งานที่ดำเนินการ หรือชื่อช่าง" />
+            <div className="ams-machine-toolbar ams-maintenance-toolbar ams-record-filter-bar">
+              <label className="ams-filter-field">
+                <span>ค้นหา</span>
+                <span className="ams-search-field">
+                  <span aria-hidden="true">⌕</span>
+                  <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหาเครื่องจักร รายละเอียด หรือช่าง" aria-label="ค้นหารหัสเครื่องจักร ชื่อเครื่องจักร รายละเอียด งานที่ดำเนินการ หรือชื่อช่าง" />
+                </span>
               </label>
-              <label className="ams-status-filter"><span>สถานะ</span>
+              <label className="ams-filter-field ams-status-filter"><span>สถานะ</span>
                 <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as MaintenanceStatusFilter)} aria-label="กรองรายการซ่อมบำรุงตามสถานะ">
                   {statusFilters.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
-              <label className="ams-status-filter"><span>เครื่องจักร</span>
+              <label className="ams-filter-field ams-status-filter"><span>เครื่องจักร</span>
                 <select value={machineFilter} onChange={(event) => setMachineFilter(event.target.value)} aria-label="กรองรายการซ่อมบำรุงตามเครื่องจักร">
                   <option value="all">เครื่องจักรทั้งหมด</option>
                   {machines.map((machine) => <option key={machine.id} value={machine.id}>{machine.machine_code} · {machine.machine_name}</option>)}
                 </select>
               </label>
-              <label className="ams-date-filter"><span>วันที่เริ่มต้น</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-label="วันที่เริ่มต้นสำหรับกรองรายการซ่อมบำรุง" /></label>
-              <label className="ams-date-filter"><span>วันที่สิ้นสุด</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-label="วันที่สิ้นสุดสำหรับกรองรายการซ่อมบำรุง" /></label>
-              <button className="ams-clear-filter-button" type="button" onClick={clearFilters}>ล้างตัวกรอง</button>
-              <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
-              <button className="ams-export-button" type="button" onClick={exportMaintenance} disabled={isLoading || filteredRecords.length === 0} aria-label="ส่งออกรายการซ่อมบำรุงเป็น CSV"><span aria-hidden="true">↓</span> Export CSV</button>
-              {!isLoading && filteredRecords.length === 0 && <span className="ams-export-empty" role="status">ไม่มีข้อมูลสำหรับส่งออก</span>}
+              <label className="ams-filter-field ams-date-filter"><span>วันที่เริ่มต้น</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-label="วันที่เริ่มต้นสำหรับกรองรายการซ่อมบำรุง" /></label>
+              <label className="ams-filter-field ams-date-filter"><span>วันที่สิ้นสุด</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-label="วันที่สิ้นสุดสำหรับกรองรายการซ่อมบำรุง" /></label>
+              <div className="ams-filter-actions">
+                <button className="ams-clear-filter-button" type="button" onClick={clearFilters}>ล้างตัวกรอง</button>
+                <button className="ams-refresh-button" type="button" onClick={reloadRecords} disabled={isLoading}><span aria-hidden="true">↻</span> โหลดใหม่</button>
+                <button className="ams-export-button" type="button" onClick={exportMaintenance} disabled={isLoading || filteredRecords.length === 0} aria-label="ส่งออกรายการซ่อมบำรุงเป็น CSV"><span aria-hidden="true">↓</span> Export CSV</button>
+                {!isLoading && filteredRecords.length === 0 && <span className="ams-export-empty" role="status">ไม่มีข้อมูลสำหรับส่งออก</span>}
+              </div>
               {!isDateRangeValid && <p className="ams-date-range-error" role="alert">วันที่เริ่มต้นต้องไม่อยู่หลังวันที่สิ้นสุด</p>}
             </div>
 
