@@ -40,7 +40,7 @@ export default function HomeAuthGuard({ children, allowedRoles }: HomeAuthGuardP
 
         const { data: profile, error } = await getSupabaseClient()
           .from("profiles")
-          .select("role")
+          .select("role, approval_status")
           .eq("id", data.session.user.id)
           .maybeSingle();
         if (!isMounted) return;
@@ -48,7 +48,26 @@ export default function HomeAuthGuard({ children, allowedRoles }: HomeAuthGuardP
           setGuardState({ status: "error", message: "ไม่สามารถโหลดข้อมูลสิทธิ์ของบัญชีได้ กรุณาลองใหม่อีกครั้ง" });
           return;
         }
-        if (!profile || !isUserRole(profile.role)) {
+        if (!profile) {
+          setGuardState({ status: "unauthorized" });
+          return;
+        }
+
+        if (profile.approval_status === "pending") {
+          setGuardState({ status: "redirecting" });
+          router.replace("/pending-approval");
+          return;
+        }
+        if (profile.approval_status === "rejected") {
+          setGuardState({ status: "redirecting" });
+          router.replace("/access-rejected");
+          return;
+        }
+        if (profile.approval_status !== "approved") {
+          setGuardState({ status: "unauthorized" });
+          return;
+        }
+        if (!isUserRole(profile.role)) {
           setGuardState({ status: "unauthorized" });
           return;
         }

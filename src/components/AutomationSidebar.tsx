@@ -1,10 +1,42 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "../lib/supabase/client";
 
 type AutomationSidebarProps = {
-  activeItem: "dashboard" | "machines" | "alarms" | "maintenance";
+  activeItem: "dashboard" | "machines" | "alarms" | "maintenance" | "user-access";
 };
 
 export default function AutomationSidebar({ activeItem }: AutomationSidebarProps) {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkAdminRole() {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", sessionData.session.user.id)
+          .maybeSingle();
+        if (isMounted && profile?.role === "admin") setIsAdmin(true);
+      } catch {
+        // Keep the admin-only navigation hidden if the role cannot be verified.
+      }
+    }
+
+    void checkAdminRole();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <aside className="ams-sidebar">
       <Link className="ams-brand" href="/" aria-label="Dashboard ระบบ Automation Management System">
@@ -26,6 +58,11 @@ export default function AutomationSidebar({ activeItem }: AutomationSidebarProps
         <Link className={`ams-nav-link${activeItem === "maintenance" ? " is-active" : ""}`} href="/maintenance" aria-current={activeItem === "maintenance" ? "page" : undefined}>
           <span className="ams-nav-glyph">04</span>Maintenance
         </Link>
+        {isAdmin && (
+          <Link className={`ams-nav-link${activeItem === "user-access" ? " is-active" : ""}`} href="/user-access" aria-current={activeItem === "user-access" ? "page" : undefined}>
+            <span className="ams-nav-glyph">05</span>User Access
+          </Link>
+        )}
       </nav>
 
       <div className="ams-sidebar-foot">

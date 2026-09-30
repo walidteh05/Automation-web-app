@@ -70,6 +70,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             id: data.user.id,
             display_name: displayName,
             role,
+            approval_status: "pending",
           });
           if (profileError) throw profileError;
           router.push("/");
@@ -100,7 +101,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         const displayName = typeof metadata.display_name === "string" ? metadata.display_name : email.split("@")[0];
         const { data: createdProfile, error: profileError } = await supabase
           .from("profiles")
-          .insert({ id: data.user.id, display_name: displayName, role: "technician" })
+          .insert({ id: data.user.id, display_name: displayName, role: "technician", approval_status: "pending" })
           .select("role")
           .single();
         if (profileError) throw profileError;
