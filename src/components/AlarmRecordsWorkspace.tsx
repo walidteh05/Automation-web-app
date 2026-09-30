@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import AuthControls from "./AuthControls";
 import AutomationSidebar from "./AutomationSidebar";
+import NotificationCenter from "./NotificationCenter";
 import { getSupabaseClient, type UserRole } from "../lib/supabase/client";
 import { downloadCsv } from "../lib/csv";
 import { isValidDateRange, isWithinLocalDateRange } from "../lib/dateRange";
@@ -300,7 +301,7 @@ export default function AlarmRecordsWorkspace() {
       <div className="ams-workspace">
         <header className="ams-topbar">
           <div className="ams-breadcrumb"><span>ปฏิบัติการ</span><b>/</b><strong>Alarms</strong></div>
-          <div className="ams-topbar-meta"><span className="ams-readonly-tag">รายการ Alarm</span><AuthControls /></div>
+          <div className="ams-topbar-meta"><span className="ams-readonly-tag">รายการ Alarm</span><NotificationCenter refreshKey={reloadKey} /><AuthControls /></div>
         </header>
 
         <main className="ams-main ams-alarms-main">

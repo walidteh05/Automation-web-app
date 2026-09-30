@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AuthControls from "./AuthControls";
 import AutomationSidebar from "./AutomationSidebar";
+import NotificationCenter from "./NotificationCenter";
 import MachineHistoryModal from "./MachineHistoryModal";
 import { getSupabaseClient, type UserRole } from "../lib/supabase/client";
 
@@ -248,7 +249,7 @@ export default function MachinesWorkspace() {
       <div className="ams-workspace">
         <header className="ams-topbar">
           <div className="ams-breadcrumb"><span>ปฏิบัติการ</span><b>/</b><strong>Machines</strong></div>
-          <div className="ams-topbar-meta"><span className="ams-readonly-tag">ข้อมูลหลักเครื่องจักร</span><AuthControls /></div>
+          <div className="ams-topbar-meta"><span className="ams-readonly-tag">ข้อมูลหลักเครื่องจักร</span><NotificationCenter /><AuthControls /></div>
         </header>
 
         <main className="ams-main ams-machines-main">

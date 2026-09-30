@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AuthControls from "./AuthControls";
 import AutomationSidebar from "./AutomationSidebar";
+import NotificationCenter from "./NotificationCenter";
 import { getSupabaseClient, type UserRole } from "../lib/supabase/client";
 
 type DashboardIdentity = {
@@ -271,7 +272,7 @@ export default function AutomationDashboard() {
       <div className="ams-workspace">
         <header className="ams-topbar">
           <div className="ams-breadcrumb"><span>ปฏิบัติการ</span><b>/</b><strong>ภาพรวม</strong></div>
-          <div className="ams-topbar-meta"><span className="ams-shift-tag"><i /> กะกลางวัน <b>06:00–14:00</b></span><span className="ams-sample-tag">ข้อมูลล่าสุด</span><button className="ams-refresh-button" type="button" onClick={refreshDashboard} disabled={isDataLoading} aria-label="โหลดข้อมูล Dashboard ใหม่"><span aria-hidden="true">↻</span> โหลดใหม่</button></div>
+          <div className="ams-topbar-meta"><span className="ams-shift-tag"><i /> กะกลางวัน <b>06:00–14:00</b></span><span className="ams-sample-tag">ข้อมูลล่าสุด</span><NotificationCenter refreshKey={reloadKey} /><button className="ams-refresh-button" type="button" onClick={refreshDashboard} disabled={isDataLoading} aria-label="โหลดข้อมูล Dashboard ใหม่"><span aria-hidden="true">↻</span> โหลดใหม่</button></div>
         </header>
 
         <main className="ams-main">
