@@ -1,8 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { getSupabaseClient, isUserRole, type UserRole } from "../lib/supabase/client";
+
+const VerifiedUserRoleContext = createContext<UserRole | null>(null);
+
+export function useVerifiedUserRole() {
+  return useContext(VerifiedUserRoleContext);
+}
 
 type HomeAuthGuardProps = {
   children: ReactNode;
@@ -14,7 +20,7 @@ type GuardState =
   | { status: "redirecting" }
   | { status: "error"; message: string }
   | { status: "unauthorized" }
-  | { status: "authorized" };
+  | { status: "authorized"; role: UserRole };
 
 export default function HomeAuthGuard({ children, allowedRoles }: HomeAuthGuardProps) {
   const router = useRouter();
@@ -74,7 +80,7 @@ export default function HomeAuthGuard({ children, allowedRoles }: HomeAuthGuardP
 
         setGuardState(
           !allowedRoles || allowedRoles.includes(profile.role)
-            ? { status: "authorized" }
+            ? { status: "authorized", role: profile.role }
             : { status: "unauthorized" },
         );
       } catch {
@@ -95,5 +101,9 @@ export default function HomeAuthGuard({ children, allowedRoles }: HomeAuthGuardP
   if (guardState.status === "unauthorized") {
     return <p role="alert">บัญชีนี้ไม่มีสิทธิ์เข้าถึงหน้านี้</p>;
   }
-  return children;
+  return (
+    <VerifiedUserRoleContext.Provider value={guardState.role}>
+      {children}
+    </VerifiedUserRoleContext.Provider>
+  );
 }

@@ -1,41 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getSupabaseClient } from "../lib/supabase/client";
+import { useVerifiedUserRole } from "./HomeAuthGuard";
 
 type AutomationSidebarProps = {
   activeItem: "dashboard" | "machines" | "alarms" | "maintenance" | "user-access";
 };
 
 export default function AutomationSidebar({ activeItem }: AutomationSidebarProps) {
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function checkAdminRole() {
-      try {
-        const supabase = getSupabaseClient();
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) return;
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", sessionData.session.user.id)
-          .maybeSingle();
-        if (isMounted && profile?.role === "admin") setIsAdmin(true);
-      } catch {
-        // Keep the admin-only navigation hidden if the role cannot be verified.
-      }
-    }
-
-    void checkAdminRole();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const isAdmin = useVerifiedUserRole() === "admin";
 
   return (
     <aside className="ams-sidebar">
