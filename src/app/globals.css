@@ -122,8 +122,8 @@ body {
 .ams-account-copy { display: flex; flex-direction: column; min-width: 0; }
 .ams-account-copy strong { max-width: 180px; overflow: hidden; color: #26382e; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .ams-account-copy span { color: #77847b; font-family: var(--font-geist-mono), monospace; font-size: 9px; }
-.ams-account .nav-register { margin-left: 6px; border-radius: 3px; padding: 7px 10px; color: #3c5145; background: #e8ede7; font-size: 10px; }
-.ams-account .nav-register:hover { color: #fff; background: #355644; }
+.ams-account .nav-register, .ams-topbar .nav-register { margin-left: 6px; border-radius: 3px; padding: 7px 10px; color: #3c5145; background: #e8ede7; font-size: 10px; }
+.ams-account .nav-register:hover, .ams-topbar .nav-register:hover { color: #fff; background: #355644; }
 
 .ams-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
 .ams-metric { position: relative; min-height: 118px; padding: 14px 15px 12px; overflow: hidden; border: 1px solid var(--ams-line); background: var(--ams-paper); }
@@ -390,7 +390,7 @@ body {
 @media (max-width: 390px) {
   .ams-account { gap: 7px; }
   .ams-account-copy strong { max-width: 110px; }
-  .ams-account .nav-register { margin-left: 0; padding: 6px 7px; }
+  .ams-account .nav-register, .ams-topbar .nav-register { margin-left: 0; padding: 6px 7px; }
   .ams-metric { padding-right: 9px; padding-left: 11px; }
   .ams-metric small { font-size: 8px; }
   .ams-footer { font-size: 7px; }
